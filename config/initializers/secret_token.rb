@@ -4,4 +4,4 @@
 # If you change this key, all old signed cookies will become invalid!
 # Make sure the secret is at least 30 characters and all random,
 # no regular words or you'll be exposed to dictionary attacks.
-ATBIP::Application.config.secret_token = '81ea7eda5da323c8bb532f7d04aaa6f30a1698da76ca0e527fb35aed0fa0396940d16b6b0536d328115e307d8d46d1c4bb700b25224a546e92fc13a739d742b1'
+Atbip::Application.config.secret_token = '7838995905f306a033e55b022e049816409e320b7336c8e799a8d7893da58aa40ce3746ace100e68ee4857ad5768ab9eb4190282a46ac91988617cc28eb64c0b'
