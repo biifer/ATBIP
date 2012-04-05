@@ -17,6 +17,10 @@
           <%= link_to "Sign in with Twitter", "/auth/twitter" %>
         <% end %>
       </div>
+	 <% flash.each do |name, msg| %>
+	        <%= content_tag :div, msg, :id => "flash_#{name}" %>
+	      <% end %>
+	      <%= content_tag :h1, yield(:title) %>
       <%= yield %>
     </div>
   </body>

@@ -1,11 +1,13 @@
 Atbip::Application.routes.draw do
   
-  resources :devices
-  
-  root :to => "devices#index"
+  root :to => "sessions#new"
 
   match "/auth/:provider/callback" => "sessions#create"
+  match "/auth/failiure", to: "sessions#failiure"
   match "/signout" => "sessions#destroy", :as => :signout
+  
+  resources :identities    
+  resources :devices
   
   # The priority is based upon order of creation:
   # first created -> highest priority.

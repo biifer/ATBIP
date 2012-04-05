@@ -1,6 +1,6 @@
 class CreateDevices < ActiveRecord::Migration
   def change
-    create_table :devices do |t|
+    alter_table :devices do |t|
       t.string :name
       t.integer :id
       t.time :last_changed
