@@ -12,7 +12,12 @@
     <strong>OmniAuth UID:</strong>
     <%= current_user.uid %>
   </p>
-  <p><%= link_to "Log out", logout_path %></p>
+  <p>
+    <strong>Role:</strong>
+    <%= current_user.role %>
+  </p>
+  <p><%= link_to "Devices", devices_path %></p>
+
 <% else %>
   <h1>Sign In</h1>
 
