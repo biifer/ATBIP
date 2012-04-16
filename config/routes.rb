@@ -5,5 +5,5 @@ Auth::Application.routes.draw do
   match "/auth/:provider/callback", to: "sessions#create"
   match "/auth/failure", to: "sessions#failure"
   match "/logout", to: "sessions#destroy", :as => "logout"
-  #resources :identities
+  resources :identities
 end
