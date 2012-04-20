@@ -1,4 +1,10 @@
 Auth::Application.routes.draw do
+  resources :gateways
+
+  resources :sensor_data
+
+  resources :sensors
+
   resources :devices
 
   root to: "sessions#new"

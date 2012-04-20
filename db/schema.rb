@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120405171540) do
+ActiveRecord::Schema.define(:version => 20120420115648) do
 
   create_table "devices", :force => true do |t|
     t.string   "name"
@@ -23,12 +23,35 @@ ActiveRecord::Schema.define(:version => 20120405171540) do
     t.string   "owner"
   end
 
+  create_table "gateways", :force => true do |t|
+    t.string   "name"
+    t.string   "address"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "gateway_id"
+  end
+
   create_table "identities", :force => true do |t|
     t.string   "name"
     t.string   "email"
     t.string   "password_digest"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "sensor_data", :force => true do |t|
+    t.string   "value"
+    t.string   "sensor_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "sensors", :primary_key => "sensor_id", :force => true do |t|
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "name"
+    t.string   "type"
+    t.string   "gateway_id"
   end
 
   create_table "users", :force => true do |t|

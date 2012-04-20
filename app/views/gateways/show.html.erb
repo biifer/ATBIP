@@ -1,0 +1,20 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Name:</b>
+  <%= @gateway.name %>
+</p>
+
+<p>
+  <b>Address:</b>
+  <%= @gateway.address %>
+</p>
+
+<p>
+  <b>Gateway:</b>
+  <%= @gateway.id %>
+</p>
+
+
+<%= link_to 'Edit', edit_gateway_path(@gateway) %> |
+<%= link_to 'Back', gateways_path %>
