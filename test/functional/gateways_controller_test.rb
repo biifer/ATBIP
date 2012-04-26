@@ -18,30 +18,30 @@ class GatewaysControllerTest < ActionController::TestCase
 
   test "should create gateway" do
     assert_difference('Gateway.count') do
-      post :create, gateway: @gateway.attributes
+      post :create, gateway: { gateway_id: @gateway.gateway_id, name: @gateway.name }
     end
 
     assert_redirected_to gateway_path(assigns(:gateway))
   end
 
   test "should show gateway" do
-    get :show, id: @gateway.to_param
+    get :show, id: @gateway
     assert_response :success
   end
 
   test "should get edit" do
-    get :edit, id: @gateway.to_param
+    get :edit, id: @gateway
     assert_response :success
   end
 
   test "should update gateway" do
-    put :update, id: @gateway.to_param, gateway: @gateway.attributes
+    put :update, id: @gateway, gateway: { gateway_id: @gateway.gateway_id, name: @gateway.name }
     assert_redirected_to gateway_path(assigns(:gateway))
   end
 
   test "should destroy gateway" do
     assert_difference('Gateway.count', -1) do
-      delete :destroy, id: @gateway.to_param
+      delete :destroy, id: @gateway
     end
 
     assert_redirected_to gateways_path

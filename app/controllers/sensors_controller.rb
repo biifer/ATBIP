@@ -1,4 +1,5 @@
 class SensorsController < ApplicationController
+  before_filter :authenticate_user!
   # GET /sensors
   # GET /sensors.json
   def index
@@ -26,9 +27,17 @@ class SensorsController < ApplicationController
   def new
     @sensor = Sensor.new
 
+    #------------------------------------------------------------------------
+    # EDIT:
+    #   Receives the id of the gateway and passes it to 'Sensor/View/new.html' 
+    #------------------------------------------------------------------------
+
+    @gw = params[:gw]
+
     respond_to do |format|
       format.html # new.html.erb
       format.json { render json: @sensor }
+      format.json { render json: @gw}
     end
   end
 
@@ -61,7 +70,7 @@ class SensorsController < ApplicationController
     respond_to do |format|
       if @sensor.update_attributes(params[:sensor])
         format.html { redirect_to @sensor, notice: 'Sensor was successfully updated.' }
-        format.json { head :ok }
+        format.json { head :no_content }
       else
         format.html { render action: "edit" }
         format.json { render json: @sensor.errors, status: :unprocessable_entity }
@@ -76,8 +85,8 @@ class SensorsController < ApplicationController
     @sensor.destroy
 
     respond_to do |format|
-      format.html { redirect_to sensors_url }
-      format.json { head :ok }
+      format.html { redirect_to gateway_path }
+      format.json { head :no_content }
     end
   end
 end

@@ -3,7 +3,6 @@
 <table>
   <tr>
     <th>Name</th>
-    <th>Address</th>
     <th>Gateway</th>
     <th></th>
     <th></th>
@@ -13,8 +12,7 @@
 <% @gateways.each do |gateway| %>
   <tr>
     <td><%= gateway.name %></td>
-    <td><%= gateway.address %></td>
-    <td><%= gateway.id %></td>
+    <td><%= gateway.gateway_id %></td>
     <td><%= link_to 'Show', gateway %></td>
     <td><%= link_to 'Edit', edit_gateway_path(gateway) %></td>
     <td><%= link_to 'Destroy', gateway, confirm: 'Are you sure?', method: :delete %></td>

@@ -6,15 +6,24 @@
 </p>
 
 <p>
-  <b>Address:</b>
-  <%= @gateway.address %>
-</p>
-
-<p>
   <b>Gateway:</b>
-  <%= @gateway.id %>
+  <%= @gateway.gateway_id %>
 </p>
+<div>
+	<p> 
+		<b>Sensors:</b>
+		<% @sensor.each do |sensor| %>
+		<br />
+		<%= sensor.name %>
+		-
+		<%= sensor.sensor_type %>
+		-
+		<%= link_to 'Show', sensor %>
+		<% end %>	
+	</p>
+</div>
 
 
 <%= link_to 'Edit', edit_gateway_path(@gateway) %> |
-<%= link_to 'Back', gateways_path %>
+<%= link_to 'Back', gateways_path %> |
+<%= link_to 'New Sensor',new_sensor_path(:actions => 'new', :gw => @gateway)%> |

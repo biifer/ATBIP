@@ -1,8 +1,16 @@
 class GatewaysController < ApplicationController
+  before_filter :authenticate_user!
   # GET /gateways
   # GET /gateways.json
   def index
-    @gateways = Gateway.all
+
+    #------------------------------------------------------------------------
+    # EDIT:
+    #   Gets all gateways that belongs to the current user. 
+    #------------------------------------------------------------------------
+
+    #@gateways = Gateway.all
+    @gateways = Gateway.where({ :owner => [current_user]}).all
 
     respond_to do |format|
       format.html # index.html.erb
@@ -13,11 +21,25 @@ class GatewaysController < ApplicationController
   # GET /gateways/1
   # GET /gateways/1.json
   def show
-    @gateway = Gateway.find(params[:id])
 
-    respond_to do |format|
+    #------------------------------------------------------------------------
+    # EDIT: 
+    #   Gets the gateway with gateway/'ID' if the user owns that gateway else 
+    # redirect to 'index' page. 
+    #   Gets sensors that belongs to this Gateway.
+    #------------------------------------------------------------------------
+
+    @gateway = Gateway.find_by_id_and_owner(params[:id], current_user.id)
+    @sensor = Sensor.where(:gw => params[:id])
+
+    if @gateway.nil?
+      redirect_to :action=>'index'
+    else    
+      respond_to do |format|
       format.html # show.html.erb
-      format.json { render json: @gateway }
+      format.json { render json: @gateway}
+      format.json { render json: @sensor}
+      end
     end
   end
 
@@ -34,7 +56,20 @@ class GatewaysController < ApplicationController
 
   # GET /gateways/1/edit
   def edit
-    @gateway = Gateway.find(params[:id])
+
+    #------------------------------------------------------------------------
+    # EDIT: 
+    #   Gets the gateway with gateway/'ID' if the user owns that gateway else 
+    # redirect to 'index' page 
+    #------------------------------------------------------------------------
+
+    #@gateway = Gateway.find(params[:id])
+    @gateway = Gateway.find_by_id_and_owner(params[:id], current_user.id)
+
+    if @gateway.nil?
+      redirect_to :action=>'index'
+    else
+    end
   end
 
   # POST /gateways
@@ -42,8 +77,11 @@ class GatewaysController < ApplicationController
   def create
     @gateway = Gateway.new(params[:gateway])
 
+    @gateway.owner = current_user.id
+
     respond_to do |format|
       if @gateway.save
+
         format.html { redirect_to @gateway, notice: 'Gateway was successfully created.' }
         format.json { render json: @gateway, status: :created, location: @gateway }
       else
@@ -51,6 +89,7 @@ class GatewaysController < ApplicationController
         format.json { render json: @gateway.errors, status: :unprocessable_entity }
       end
     end
+
   end
 
   # PUT /gateways/1
@@ -61,7 +100,7 @@ class GatewaysController < ApplicationController
     respond_to do |format|
       if @gateway.update_attributes(params[:gateway])
         format.html { redirect_to @gateway, notice: 'Gateway was successfully updated.' }
-        format.json { head :ok }
+        format.json { head :no_content }
       else
         format.html { render action: "edit" }
         format.json { render json: @gateway.errors, status: :unprocessable_entity }
@@ -77,7 +116,7 @@ class GatewaysController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to gateways_url }
-      format.json { head :ok }
+      format.json { head :no_content }
     end
   end
 end

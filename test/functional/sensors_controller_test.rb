@@ -18,30 +18,30 @@ class SensorsControllerTest < ActionController::TestCase
 
   test "should create sensor" do
     assert_difference('Sensor.count') do
-      post :create, sensor: @sensor.attributes
+      post :create, sensor: { name: @sensor.name, sensor_id: @sensor.sensor_id, sensor_type: @sensor.sensor_type }
     end
 
     assert_redirected_to sensor_path(assigns(:sensor))
   end
 
   test "should show sensor" do
-    get :show, id: @sensor.to_param
+    get :show, id: @sensor
     assert_response :success
   end
 
   test "should get edit" do
-    get :edit, id: @sensor.to_param
+    get :edit, id: @sensor
     assert_response :success
   end
 
   test "should update sensor" do
-    put :update, id: @sensor.to_param, sensor: @sensor.attributes
+    put :update, id: @sensor, sensor: { name: @sensor.name, sensor_id: @sensor.sensor_id, sensor_type: @sensor.sensor_type }
     assert_redirected_to sensor_path(assigns(:sensor))
   end
 
   test "should destroy sensor" do
     assert_difference('Sensor.count', -1) do
-      delete :destroy, id: @sensor.to_param
+      delete :destroy, id: @sensor
     end
 
     assert_redirected_to sensors_path

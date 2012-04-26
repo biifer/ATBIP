@@ -2,6 +2,9 @@
 
 <table>
   <tr>
+    <th>Name</th>
+    <th>Sensor type</th>
+    <th>Sensor</th>
     <th></th>
     <th></th>
     <th></th>
@@ -9,6 +12,9 @@
 
 <% @sensors.each do |sensor| %>
   <tr>
+    <td><%= sensor.name %></td>
+    <td><%= sensor.sensor_type %></td>
+    <td><%= sensor.sensor_id %></td>
     <td><%= link_to 'Show', sensor %></td>
     <td><%= link_to 'Edit', edit_sensor_path(sensor) %></td>
     <td><%= link_to 'Destroy', sensor, confirm: 'Are you sure?', method: :delete %></td>

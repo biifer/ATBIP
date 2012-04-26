@@ -2,10 +2,8 @@
 
 one:
   name: MyString
-  address: MyString
   gateway_id: MyString
 
 two:
   name: MyString
-  address: MyString
   gateway_id: MyString

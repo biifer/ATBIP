@@ -1,5 +1,66 @@
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+
+
+    /* ***********************************************
+		Receives the sensor object and extracts an INT 
+		This could be used to add sensor data to the chart 
+    ************************************************ */
+    var test = <%= h @sensor.gw -%>
+
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+
+      	var gaugeData = new google.visualization.DataTable();
+		gaugeData.addColumn('number', 'Year');
+		gaugeData.addColumn('number', 'Sales');
+		gaugeData.addColumn('number', test);
+		gaugeData.addRows(6);
+		gaugeData.setCell(0, 0, 2012);
+		gaugeData.setCell(0, 1, 50);
+		gaugeData.setCell(0, 2, 109);
+		gaugeData.setCell(1, 0, 2013);
+		gaugeData.setCell(1, 1, <%= h @sensor.gw -%>);
+		gaugeData.setCell(1, 2, 109);
+
+        /*var data = google.visualization.arrayToDataTable([
+          ['Year', 'Sales', 'Expenses'],
+          ['2004',  @sensor.gw,      400],
+          ['2005',  1170,      460],
+          ['2006',  660,       1120],
+          ['2007',  1030,      540]
+        ]);
+		*/
+        var options = {
+          title: 'Company Performance'
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(gaugeData, options);
+      }
+    </script>
+
 <p id="notice"><%= notice %></p>
 
+<p>
+  <b>Name:</b>
+  <%= @sensor.name %>
+</p>
+
+<p>
+  <b>Sensor type:</b>
+  <%= @sensor.sensor_type %>
+</p>
+
+<p>
+  <b>Sensor:</b>
+  <%= @sensor.sensor_id %>
+</p>
+
+<div id="chart_div" style="width: 450px; height: 250px;"></div>
 
 <%= link_to 'Edit', edit_sensor_path(@sensor) %> |
-<%= link_to 'Back', sensors_path %>
+<%= link_to 'Destroy', @sensor, confirm: 'Are you sure?', method: :delete %> |
+<%= link_to 'Back', gateway_path(@sensor.gw) %>
+

@@ -11,7 +11,7 @@
 
 development:
   adapter: mysql
-  database: development
+  database: development3
   username: ivan  
   password: eKufsfrQMNrSyB4K
   host: biifer.mine.nu
@@ -29,7 +29,7 @@ development:
 
 test:
   adapter: mysql
-  database: test
+  database: test3
   username: ivan  
   password: eKufsfrQMNrSyB4K
   host: biifer.mine.nu
@@ -44,7 +44,7 @@ test:
 
   production:
   adapter: mysql
-  database: production
+  database: production3
   username: ivan  
   password: eKufsfrQMNrSyB4K
   host: biifer.mine.nu

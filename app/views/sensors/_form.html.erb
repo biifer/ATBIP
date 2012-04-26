@@ -1,5 +1,5 @@
 <%= form_for(@sensor) do |f| %>
-  <% if @sensor.errors.any? %>
+ <% if @sensor.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@sensor.errors.count, "error") %> prohibited this sensor from being saved:</h2>
 
@@ -11,7 +11,21 @@
     </div>
   <% end %>
 
-  <div class="actions">
+  <div class="field">
+    <%= f.label :name %><br />
+    <%= f.text_field :name %>
+  </div>
+  <div class="field">
+    <%= f.label :sensor_type %><br />
+    <%= f.text_field :sensor_type %>
+  </div>
+  <div class="field">
+    <%= f.label :sensor_id %><br />
+    <%= f.text_field :sensor_id %>
+  </div>
+    <!-- Passes a hidden_field with the gateways value, @gw comes from 'Controller: sensor/new' -->
+    <%= f.hidden_field :gw, { :value => @gw } %>
+    <div class="actions">
     <%= f.submit %>
   </div>
 <% end %>
