@@ -15,10 +15,18 @@ class SensorsController < ApplicationController
   # GET /sensors/1.json
   def show
     @sensor = Sensor.find(params[:id])
+    @sensor_data = Sensor.all
+
+#    @min = getMin(@sensor)
+ #   @max = getMax(@sensor)
 
     respond_to do |format|
       format.html # show.html.erb
-      format.json { render json: @sensor }
+      format.json { render json: @sensor }   
+      format.json { render json: @sensor_data }     
+    #  format.json { render json: @min }
+     #§ format.json { render json: @max }
+
     end
   end
 

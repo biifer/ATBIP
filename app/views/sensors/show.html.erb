@@ -58,9 +58,21 @@
   <%= @sensor.sensor_id %>
 </p>
 
+<p>
+  <b>Min temperature:</b>
+  <%= getMin(@sensor_data) %>
+</p>
+
+<p>
+  <b>Max temperature:</b>
+  <%= getMax(@sensor_data) %>
+</p>
+
 <div id="chart_div" style="width: 450px; height: 250px;"></div>
 
 <%= link_to 'Edit', edit_sensor_path(@sensor) %> |
 <%= link_to 'Destroy', @sensor, confirm: 'Are you sure?', method: :delete %> |
 <%= link_to 'Back', gateway_path(@sensor.gw) %>
+
+
 
