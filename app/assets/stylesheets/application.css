@@ -17,6 +17,14 @@ hr {
   color: #f0f0ee;
 }
 
+#user_log_in {
+  text-align: center;
+}
+
+#user_nav {
+  float: right;
+}
+
 #header {
   background: #c9deb7;
 
