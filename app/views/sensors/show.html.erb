@@ -1,37 +1,32 @@
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
+<script type="text/javascript">
 
 
-    /* ***********************************************
-		Receives the sensor object and extracts an INT 
-		This could be used to add sensor data to the chart 
-    ************************************************ */
-    var test = <%= h @sensor.gw -%>
+  /* ***********************************************
+	Receives the sensor object and extracts an INT 
+	This could be used to add sensor data to the chart 
+  ************************************************ */
+google.load("visualization", "1", {packages:["corechart"]});
+google.setOnLoadCallback(drawChart);
+function drawChart() {
 
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
+ 	var gaugeData = new google.visualization.DataTable();
+	gaugeData.addColumn('string', 'Date');
+	gaugeData.addColumn('number', '<%= h @sensor.sensor_type -%>');
+	gaugeData.addRows(<%= h @sensor_data.length -%>);
 
-      	var gaugeData = new google.visualization.DataTable();
-		gaugeData.addColumn('number', 'Year');
-		gaugeData.addColumn('number', 'Sales');
-		gaugeData.addColumn('number', test);
-		gaugeData.addRows(6);
-		gaugeData.setCell(0, 0, 2012);
-		gaugeData.setCell(0, 1, 50);
-		gaugeData.setCell(0, 2, 109);
-		gaugeData.setCell(1, 0, 2013);
-		gaugeData.setCell(1, 1, <%= h @sensor.gw -%>);
-		gaugeData.setCell(1, 2, 109);
+  <% @sensor_data.each do |sensor| %>
+    gaugeData.setCell(<%= sensor.id - 1%>, 1, <%= sensor.value %>);
+    gaugeData.setCell(<%= sensor.id - 1%>, 0, '<%= sensor.created_at %>');
+  <% end %>
+  var options = {
+    title: '<%= h @sensor.sensor_type -%>'
+  };
 
-        var options = {
-          title: '<%= h @sensor.sensor_type -%>'
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(gaugeData, options);
-      }
-    </script>
+  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    chart.draw(gaugeData, options);
+  }
+</script>
 
 <p id="notice"><%= notice %></p>
 
