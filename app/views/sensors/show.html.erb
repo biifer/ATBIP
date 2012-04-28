@@ -6,24 +6,26 @@
 	Receives the sensor object and extracts an INT 
 	This could be used to add sensor data to the chart 
   ************************************************ */
-google.load("visualization", "1", {packages:["corechart"]});
-google.setOnLoadCallback(drawChart);
-function drawChart() {
+  google.load("visualization", "1", {packages:["corechart"]});
+  google.setOnLoadCallback(drawChart);
+  function drawChart() {
 
- 	var gaugeData = new google.visualization.DataTable();
-	gaugeData.addColumn('string', 'Date');
-	gaugeData.addColumn('number', '<%= h @sensor.sensor_type -%>');
-	gaugeData.addRows(<%= h @sensor_data.length -%>);
+    var gaugeData = new google.visualization.DataTable();
+    gaugeData.addColumn('string', 'Date');
+    gaugeData.addColumn('number', '<%= h @sensor.sensor_type -%>');
+    gaugeData.addRows(<%= h @sensor_data.length -%>);
 
-  <% @sensor_data.each do |sensor| %>
-    gaugeData.setCell(<%= sensor.id - 1%>, 1, <%= sensor.value %>);
-    gaugeData.setCell(<%= sensor.id - 1%>, 0, '<%= sensor.created_at %>');
-  <% end %>
-  var options = {
-    title: '<%= h @sensor.sensor_type -%>'
-  };
+    var i = 0;
+    <% @sensor_data.each do |sensor| %>
+      gaugeData.setCell(i, 0, '<%= sensor.created_at %>');
+      gaugeData.setCell(i, 1, <%= sensor.value %>);
+      i++;
+    <% end %>
+    var options = {
+      title: '<%= h @sensor.sensor_type -%>'
+    };
 
-  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
     chart.draw(gaugeData, options);
   }
 </script>
