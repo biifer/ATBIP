@@ -12,13 +12,17 @@
 <div>
 	<p> 
 		<b>Sensors:</b>
-		<% @sensor.each do |sensor| %>
-		<br />
-		<%= sensor.name %>
-		-
-		<%= sensor.sensor_type %>
-		-
-		<%= link_to 'Show', sensor %>
+		<% if @sensor.length != 0 %>
+			<% @sensor.each do |sensor| %>
+			<br />
+			<%= sensor.name %>
+			-
+			<%= sensor.sensor_type %>
+			-
+			<%= link_to 'Show', sensor %>
+			<% end %>
+		<% else %>
+		<b> Found no sensors, add a <%= link_to 'new Sensor',new_sensor_path(:actions => 'new', :gw => @gateway)%></br>
 		<% end %>	
 	</p>
 </div>
