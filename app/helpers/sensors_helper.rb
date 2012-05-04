@@ -35,4 +35,17 @@ module SensorsHelper
 
 	end
 
+	def getAverage(sensor_data)
+		if sensor_data[0] != nil
+			@value = 0
+			sensor_data.each do |sensor_data|
+				@value += sensor_data.value.to_i
+			end
+			@average = @value/@sensor_data.length
+			return @average
+		else
+			return @no_value
+		end
+	end
+
 end

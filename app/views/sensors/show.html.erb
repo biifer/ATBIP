@@ -10,24 +10,73 @@
   google.setOnLoadCallback(drawChart);
   function drawChart() {
 
-    var gaugeData = new google.visualization.DataTable();
-    gaugeData.addColumn('string', 'Date');
-    gaugeData.addColumn('number', '<%= h @sensor.sensor_type -%>');
-    gaugeData.addRows(<%= h @sensor_data.length -%>);
+    var chartData = new google.visualization.DataTable();
+    chartData.addColumn('string', 'Date');
+    chartData.addColumn('number', '<%= h @sensor.sensor_type -%>');
+    chartData.addColumn('number', 'Average');
+    chartData.addColumn({type:'string', role:'tooltip'});
+    <%# This is to make the average line dotted %>
+    chartData.addColumn({type:'boolean', role:'certainty'});
+
+    chartData.addRows(<%= h @sensor_data.length -%>);
 
     var i = 0;
     <% @sensor_data.each do |sensor| %>
-      gaugeData.setCell(i, 0, '<%= sensor.created_at %>');
-      gaugeData.setCell(i, 1, <%= sensor.value %>);
+      chartData.setCell(i, 0, '<%= sensor.created_at %>');
+      chartData.setCell(i, 1, <%= sensor.value %>);
+      chartData.setCell(i, 2, <%= getAverage(@sensor_data) %>);
+      <%# This is to make the average line dotted %>
+      chartData.setCell(i, 3, 'Average temperature: <%= getAverage(@sensor_data) %>')
+      chartData.setCell(i, 4, false)
+
       i++;
     <% end %>
+
     var options = {
       title: '<%= h @sensor.sensor_type -%>'
     };
 
-    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-    chart.draw(gaugeData, options);
+    var line_chart = new google.visualization.LineChart(document.getElementById('line_chart_div'));
+    line_chart.draw(chartData, options);
   }
+</script>
+<script type='text/javascript'>
+      google.load('visualization', '1', {packages:['gauge']});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var maxGaugeData = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['Max °C', <%= getMax(@sensor_data) %>]
+        ]);
+        var minGaugeData = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['Min °C', <%= getMin(@sensor_data) %>]
+        ]);
+        var currentGaugeData = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['°C', <%= @sensor_data.last.value %>]
+        ]);
+
+        var options = {
+          <%# The 'greenColor' is in fact blue, google chart does not provide any blue color option %>
+          greenColor: '#5C67FA',
+          greenFrom: -40, greenTo: -20,
+          yellowFrom: 30, yellowTo: 40,
+          redFrom: 40, redTo: 50,
+          minorTicks: 1, 
+          min: -40,
+          max: 50,
+        };
+
+        var max_gauge_chart = new google.visualization.Gauge(document.getElementById('max_gauge_div'));
+        var min_gauge_chart = new google.visualization.Gauge(document.getElementById('min_gauge_div'));
+        var current_gauge_chart = new google.visualization.Gauge(document.getElementById('current_gauge_div'));
+
+        max_gauge_chart.draw(maxGaugeData, options);
+        min_gauge_chart.draw(minGaugeData, options);
+        current_gauge_chart.draw(currentGaugeData, options);
+
+      }
 </script>
 
 <p id="notice"><%= notice %></p>
@@ -57,7 +106,14 @@
   <%= getMax(@sensor_data) %>
 </p>
 
-<div id="chart_div" style="width: 450px; height: 250px;"></div>
+<div id="line_chart_div" style="width: 450px; height: 250px;"></div>
+
+<div id="gauges">
+  <div id="max_gauge_div" style="width: 450px; height: 250px;"></div>
+  <div id="min_gauge_div" style="width: 450px; height: 250px;"></div>
+  <div id="current_gauge_div" style="width: 450px; height: 250px;"></div>
+</div>
+
 
 <%= link_to 'Edit', edit_sensor_path(@sensor) %> |
 <%= link_to 'Destroy', @sensor, confirm: 'Are you sure?', method: :delete %> |
