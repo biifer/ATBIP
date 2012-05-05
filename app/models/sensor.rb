@@ -1,5 +1,5 @@
 class Sensor < ActiveRecord::Base
-  attr_accessible :name, :sensor_id, :sensor_type, :gw
+  attr_accessible :sensor_id, :name, :sensor_type, :gateway_id
   belongs_to :gateway
-  has_many :sensor_data
+  has_many :sensor_reading
 end

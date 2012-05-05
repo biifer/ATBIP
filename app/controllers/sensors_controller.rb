@@ -15,15 +15,16 @@ class SensorsController < ApplicationController
   # GET /sensors/1.json
   def show
     @sensor = Sensor.find(params[:id])
-    @sensor_data = SensorData.where("sensor_id = ?", @sensor.sensor_id)
+    #------------------------------------------------------------
+    #@sensor.sensor_reading can't return the readings because the 
+    #sensors ID is compared with sensorReading sesor_id column
+    #------------------------------------------------------------
+    @sensor_data = SensorReading.where("sensor_id = ?", @sensor.sensor_id)
 
     respond_to do |format|
       format.html # show.html.erb
       format.json { render json: @sensor }   
-      format.json { render json: @sensor_data }     
-    #  format.json { render json: @min }
-     #§ format.json { render json: @max }
-
+      format.json { render json: @sensor_data }
     end
   end
 
@@ -37,12 +38,12 @@ class SensorsController < ApplicationController
     #   Receives the id of the gateway and passes it to 'Sensor/View/new.html' 
     #------------------------------------------------------------------------
 
-    @gw = params[:gw]
+    @gateway_id = params[:gateway_id]
 
     respond_to do |format|
       format.html # new.html.erb
       format.json { render json: @sensor }
-      format.json { render json: @gw}
+      format.json { render json: @gateway_id }
     end
   end
 

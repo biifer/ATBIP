@@ -30,7 +30,7 @@ class GatewaysController < ApplicationController
     #------------------------------------------------------------------------
 
     @gateway = Gateway.find_by_id_and_owner(params[:id], current_user.id)
-    @sensor = Sensor.where(:gw => params[:id])
+    @sensor = @gateway.sensor
 
     if @gateway.nil?
       redirect_to :action=>'index'

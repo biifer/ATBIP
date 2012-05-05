@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120426133031) do
+ActiveRecord::Schema.define(:version => 20120504114856) do
 
   create_table "gateways", :force => true do |t|
     t.string   "name"
@@ -28,14 +28,25 @@ ActiveRecord::Schema.define(:version => 20120426133031) do
     t.datetime "updated_at", :null => false
   end
 
+  add_index "sensor_data", ["sensor_id"], :name => "sensor_id"
+
+  create_table "sensor_readings", :force => true do |t|
+    t.string   "sensor_id"
+    t.string   "value"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
   create_table "sensors", :force => true do |t|
     t.string   "name"
     t.string   "sensor_type"
     t.string   "sensor_id"
     t.datetime "created_at",  :null => false
     t.datetime "updated_at",  :null => false
-    t.string   "gw"
+    t.string   "gateway_id"
   end
+
+  add_index "sensors", ["sensor_id"], :name => "sensor_id", :unique => true
 
   create_table "users", :force => true do |t|
     t.string   "email",                  :default => "", :null => false

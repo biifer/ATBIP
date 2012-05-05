@@ -22,7 +22,7 @@
 			<%= link_to 'Show', sensor %>
 			<% end %>
 		<% else %>
-		<b> Found no sensors, add a <%= link_to 'new Sensor',new_sensor_path(:actions => 'new', :gw => @gateway)%></br>
+		<b> Found no sensors, add a <%= link_to 'new Sensor',new_sensor_path(:actions => 'new', :gateway_id => @gateway)%></br>
 		<% end %>	
 	</p>
 </div>
@@ -30,4 +30,4 @@
 
 <%= link_to 'Edit', edit_gateway_path(@gateway) %> |
 <%= link_to 'Back', gateways_path %> |
-<%= link_to 'New Sensor',new_sensor_path(:actions => 'new', :gw => @gateway)%> |
+<%= link_to 'New Sensor',new_sensor_path(:actions => 'new', :gateway_id => @gateway)%> |

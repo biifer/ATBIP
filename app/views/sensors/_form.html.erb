@@ -24,7 +24,7 @@
     <%= f.text_field :sensor_id %>
   </div>
     <!-- Passes a hidden_field with the gateways value, @gw comes from 'Controller: sensor/new' -->
-    <%= f.hidden_field :gw, { :value => @gw } %>
+    <%= f.hidden_field :gateway_id, { :value => @gateway_id } %>
     <div class="actions">
     <%= f.submit %>
   </div>
