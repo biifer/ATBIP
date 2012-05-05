@@ -35,6 +35,15 @@ module SensorsHelper
 
 	end
 
+	def getCurrent(sensor_data)
+		if sensor_data[0] != nil
+			return sensor_data.last.value
+		else
+			return @no_value
+		end
+		
+	end
+
 	def getAverage(sensor_data)
 		if sensor_data[0] != nil
 			@value = 0

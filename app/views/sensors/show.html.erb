@@ -54,7 +54,7 @@
         ]);
         var currentGaugeData = google.visualization.arrayToDataTable([
           ['Label', 'Value'],
-          ['°C', <%= @sensor_data.last.value %>]
+          ['Current °C', <%= getCurrent(@sensor_data) %>]
         ]);
 
         var options = {
@@ -78,6 +78,8 @@
 
       }
 </script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
 
 <p id="notice"><%= notice %></p>
 
@@ -106,18 +108,17 @@
   <%= getMax(@sensor_data) %>
 </p>
 
-<div id="line_chart_div" style="width: 450px; height: 250px;"></div>
+  <p id="max_gauge_div" style="width: 150px; height: 150px; float: left;"></p>
+  <p id="min_gauge_div" style="width: 150px; height: 150px; float: left;"></p>
+  <p id="current_gauge_div" style="width: 150px; height: 150px; float: left;"></p>
 
-<div id="gauges">
-  <div id="max_gauge_div" style="width: 450px; height: 250px;"></div>
-  <div id="min_gauge_div" style="width: 450px; height: 250px;"></div>
-  <div id="current_gauge_div" style="width: 450px; height: 250px;"></div>
-</div>
-
-
+<p id="line_chart_div" style="width: 450px; height: 250px; clear:left;"></p>
+<div id="highchart" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+<p>
 <%= link_to 'Edit', edit_sensor_path(@sensor) %> |
 <%= link_to 'Destroy', @sensor, confirm: 'Are you sure?', method: :delete %> |
 <%= link_to 'Back', gateway_path(@sensor.gateway_id) %>
+</p>
 
 
 
