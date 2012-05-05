@@ -7,7 +7,7 @@ $(function () {
     var temp = 0;
     $(document).ready(function() {
 
-        $.get("/sensors/75.json").success(function(sensor_data) {
+        $.get("/sensors/"+ sensor_id +".json").success(function(sensor_data) {
             
             for(var i = 0; i < sensor_data.length; i++) {
                 data_table[i] = parseInt(sensor_data[i].value);

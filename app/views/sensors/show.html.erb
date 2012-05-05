@@ -77,6 +77,8 @@
         current_gauge_chart.draw(currentGaugeData, options);
 
       }
+      // param that will be used in the external highchart.js script!
+      var sensor_id = <%= @sensor.id %>;
 </script>
 <script src="http://code.highcharts.com/highcharts.js"></script>
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
