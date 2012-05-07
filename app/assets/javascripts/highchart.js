@@ -183,18 +183,19 @@ $(function () {
             {
              //Average data! 
              
-               name: 'Average',
+                name: 'Average',
+
+                marker: {
+                    enabled: false
+                },
+                
+                dashStyle: 'shortdot',
 
                     data: (function() {
-
-                    // generate an array of random data
 
                     var data = [],
                         avg = 0,
                         i;
-
-
-                    
 
                     for (i = 0; i < sensor_data.length; i++) {
                         var split1 = sensor_data[i].created_at.split('T');
