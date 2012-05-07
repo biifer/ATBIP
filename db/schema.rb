@@ -32,6 +32,7 @@ ActiveRecord::Schema.define(:version => 20120504114856) do
 
   create_table "sensor_readings", :force => true do |t|
     t.string   "sensor_id"
+    t.string   "gateway_id"
     t.string   "value"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false

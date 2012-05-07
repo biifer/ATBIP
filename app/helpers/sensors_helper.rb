@@ -4,14 +4,14 @@ module SensorsHelper
 		@no_value = "No value"
 
 		if sensor_data[0] != nil	
-			@min = sensor_data[0].value
+			@min = sensor_data[0].value.to_i
 
 			sensor_data.each do |sensor_data| 
-				if sensor_data.value < @min 
-					@min = sensor_data.value
+				if sensor_data.value.to_i < @min 
+					@min = sensor_data.value.to_i
 				end
 			end
-			return @min
+			return @min.to_s
 		else
 			return @no_value
 		end
@@ -21,14 +21,14 @@ module SensorsHelper
 		#@no_value is not needed, it is already defined in the getMin method
 		@no_value = "No value"
 		if sensor_data[0] != nil
-			@max = sensor_data[0].value
+			@max = sensor_data[0].value.to_i
 
 			sensor_data.each do |sensor_data| 
-				if sensor_data.value > @max 
-					@max = sensor_data.value
+				if sensor_data.value.to_i > @max 
+					@max = sensor_data.value.to_i
 				end
 			end
-			return @max
+			return @max.to_s
 		else
 			return @no_value
 		end
