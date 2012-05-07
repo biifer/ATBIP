@@ -7,6 +7,16 @@ $(function () {
     var temp = 0;
     $(document).ready(function() {
 
+                Highcharts.setOptions({
+
+            global: {
+
+                useUTC: false
+
+            }
+
+        });
+
         $.get("/sensors/"+ sensor_id +".json").success(function(sensor_data) {
             
             for(var i = 0; i < sensor_data.length; i++) {
@@ -25,13 +35,43 @@ $(function () {
             // Or do whatever you want :)
             
 
-        chart = new Highcharts.Chart({
+        chart = new Highcharts.Chart({   
 
             chart: {
 
                 renderTo: 'highchart',
                 zoomType: 'x',
-                type: 'spline'
+                type: 'spline',
+
+                                events: {
+
+                    load: function() {
+
+                        
+                        // set up the updating of the chart each second
+
+                        var series = this.series[0];
+                        var length = sensor_data.length;
+                        setInterval(function() {
+                           $.ajax({url : '/sensors/75.json', type : 'GET'}).success(function(new_data) {
+                                //alert(data);
+                                if(length != new_data.length){
+                                    
+                                    length = new_data.length;
+                                    var split1 = new_data[length-1].created_at.split('T');
+                                    var split2 = split1[1].split('Z');
+                                    
+                                    var x = new Date((split1[0] + ' ' +split2[0])).getTime(), // current time
+                                    y = parseInt(new_data[length-1].value);
+                                   series.addPoint([x, y], true, true);
+                                }
+                            })
+
+                        }, 10000);
+
+                    }
+
+                }
 
             },
 
@@ -49,7 +89,9 @@ $(function () {
 
             xAxis: {
 
-                categories: date_table
+            //    categories: date_table
+                type: 'datetime',
+                tickPixelInterval: 150
 
             },
 
@@ -105,6 +147,35 @@ $(function () {
 
                 name: 'Temperature',
 
+                    data: (function() {
+
+                    // generate an array of random data
+
+                    var data = [],
+
+                        i;
+
+
+            
+
+                    for (i = 0; i < sensor_data.length; i++) {
+                        var split1 = sensor_data[i].created_at.split('T');
+                        var split2 = split1[1].split('Z');
+                        //date_table[i] = split1[0] + ' ' +split2[0];
+                        data.push({
+
+                            x: new Date((split1[0] + ' ' +split2[0])),
+
+                            y: parseInt(sensor_data[i].value)
+
+                        });
+
+                    }
+
+                    return data;
+
+                })()
+/*
                 marker: {
 
                     symbol: 'circle'
@@ -125,7 +196,7 @@ $(function () {
                 
   
             data: average_table
-
+*/
                 /*data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, {
 
                     y: 26.5,
