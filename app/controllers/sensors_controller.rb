@@ -3,7 +3,6 @@ class SensorsController < ApplicationController
   # GET /sensors
   # GET /sensors.json
   def index
-
     @sensors = Sensor.all
 
     respond_to do |format|
@@ -20,13 +19,13 @@ class SensorsController < ApplicationController
     #@sensor.sensor_reading can't return the readings because the 
     #sensors ID is compared with sensorReading sesor_id column
     #------------------------------------------------------------
-    @sensor_data = SensorReading.where("sensor_id = ?", @sensor.sensor_id)
+    @sensor_data = SensorReading.where("sensor_id = ? AND gateway_id = ?", @sensor.sensor_id, @sensor.gateway_id)
 
     respond_to do |format|
       format.html # show.html.erb
+      
       format.json { render json: @sensor_data }
       format.json { render json: @sensor }   
-      
     end
   end
 
@@ -90,13 +89,11 @@ class SensorsController < ApplicationController
   # DELETE /sensors/1.json
   def destroy
     @sensor = Sensor.find(params[:id])
-    @gateway = Gateway.where("id = ?", @sensor.gateway_id)
-
     @sensor.destroy
 
     respond_to do |format|
-      format.html { redirect_to gateway_path}
-      format.json { head :no_content}
+      format.html { redirect_to gateway_path }
+      format.json { head :no_content }
     end
   end
 end
