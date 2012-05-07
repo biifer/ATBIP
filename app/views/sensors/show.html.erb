@@ -81,6 +81,8 @@
 <script type='text/javascript'>
       // param that will be used in the external highchart.js script!
       var sensor_id = <%= @sensor.id %>;
+      var min_value = <%= getMin(@sensor_data) %>;
+      var max_value = <%= getMax(@sensor_data) %>;
 </script>
 
 <script src="http://code.highcharts.com/highcharts.js"></script>
