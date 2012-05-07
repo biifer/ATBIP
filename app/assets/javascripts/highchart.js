@@ -19,18 +19,7 @@ $(function () {
 
         $.get("/sensors/"+ sensor_id +".json").success(function(sensor_data) {
             
-            for(var i = 0; i < sensor_data.length; i++) {
-                data_table[i] = parseInt(sensor_data[i].value);
-                var split1 = sensor_data[i].created_at.split('T');
-                var split2 = split1[1].split('Z');
-                date_table[i] = split1[0] + ' ' +split2[0];
-                average += parseInt(sensor_data[i].value);
-            };
-            average = average/sensor_data.length
-            for (var i = 0; i < sensor_data.length; i++) {
-                temp += data_table[i]
-                average_table[i] = temp/(i+1);
-            };
+
 
             // Or do whatever you want :)
             
@@ -51,19 +40,33 @@ $(function () {
                         // set up the updating of the chart each second
 
                         var series = this.series[0];
+                        var seriesAverage = this.series[1];
                         var length = sensor_data.length;
+                        var totalValue = 0;
+                        var nextValue;
+                        for (var i = 0; i < sensor_data.length; i++) {
+                            totalValue += parseInt(sensor_data[i].value);
+                        };
                         setInterval(function() {
-                           $.ajax({url : '/sensors/75.json', type : 'GET'}).success(function(new_data) {
+                           $.ajax({url : '/sensors/' + sensor_id + '.json', type : 'GET'}).success(function(new_data) {
                                 //alert(data);
                                 if(length != new_data.length){
                                     
-                                    length = new_data.length;
-                                    var split1 = new_data[length-1].created_at.split('T');
+                                    for (var newSensorNumber = (new_data.length - length); newSensorNumber > 0 ; newSensorNumber--) {
+                                    nextElement = new_data.length - newSensorNumber;
+                                    totalValue += parseInt(new_data[nextElement].value);
+                                        
+                                    var split1 = new_data[nextElement].created_at.split('T');
                                     var split2 = split1[1].split('Z');
                                     
                                     var x = new Date((split1[0] + ' ' +split2[0])).getTime(), // current time
-                                    y = parseInt(new_data[length-1].value);
+                                    y = parseInt(new_data[nextElement].value);
                                    series.addPoint([x, y], true, true);
+                                   seriesAverage.addPoint([x, totalValue/nextElement], true, true);
+
+                                   };
+
+                                    length = new_data.length;
                                 }
                             })
 
@@ -175,64 +178,44 @@ $(function () {
                     return data;
 
                 })()
-/*
-                marker: {
 
-                    symbol: 'circle'
+            },
+            {
+             //Average data! 
+             
+               name: 'Average',
 
-                },
+                    data: (function() {
 
-                data: data_table
+                    // generate an array of random data
 
-            },{
-                name: 'Average',
+                    var data = [],
+                        avg = 0,
+                        i;
 
-                marker: {
 
-                    enabled: false
+                    
 
-                },
-                dashStyle: 'shortdot',
-                
-  
-            data: average_table
-*/
-                /*data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, {
+                    for (i = 0; i < sensor_data.length; i++) {
+                        var split1 = sensor_data[i].created_at.split('T');
+                        var split2 = split1[1].split('Z');
 
-                    y: 26.5,
+                        avg += parseInt(sensor_data[i].value)
 
-                    marker: {
+                        data.push({
 
-                        symbol: 'url(http://www.highcharts.com/demo/gfx/sun.png)'
+                            x: new Date((split1[0] + ' ' +split2[0])),
 
-                    }
+                            y: avg/(i+1)
 
-                }, 23.3, 18.3, 13.9, 9.6]
-
-        
-
-            }, {
-
-                name: 'London',
-
-                marker: {
-
-                    symbol: 'diamond'
-
-                },
-
-                data: [{
-
-                    y: 3.9,
-
-                    marker: {
-
-                        symbol: 'url(http://www.highcharts.com/demo/gfx/snow.png)'
+                        });
 
                     }
 
-                }, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8]
-*/
+                    return data;
+
+                })()
+
             }]
 
         });
