@@ -61,8 +61,8 @@ $(function () {
                                     
                                     var x = new Date((split1[0] + ' ' +split2[0])).getTime(), // current time
                                     y = parseInt(new_data[nextElement].value);
-                                   series.addPoint([x, y], true, true);
-                                   seriesAverage.addPoint([x, totalValue/nextElement], true, true);
+                                   series.addPoint([x, y], true, false);
+                                   seriesAverage.addPoint([x, totalValue/nextElement], true, false);
 
                                    };
 
@@ -86,7 +86,7 @@ $(function () {
 
             subtitle: {
 
-                text: 'Source (Sensor ID): ' + sensor_data[0].sensor_id
+                text: 'Source (Sensor ID): ' + sensor_id
 
             },
 
