@@ -31,6 +31,7 @@ $(function () {
                 renderTo: 'highchart',
                 zoomType: 'x',
                 type: 'spline',
+                backgroundColor: 'transparent',
 
                                 events: {
 
@@ -188,7 +189,7 @@ $(function () {
                 marker: {
                     enabled: false
                 },
-                
+
                 dashStyle: 'shortdot',
 
                     data: (function() {
