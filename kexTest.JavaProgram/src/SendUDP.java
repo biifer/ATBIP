@@ -4,7 +4,6 @@ import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Random;
 
 import javax.crypto.*;
@@ -26,10 +25,10 @@ public class SendUDP {
 		try {
 			SendUDP test = new SendUDP();
 			clientSocket = new DatagramSocket();
-			
+
 			Random rnd = new Random();
-			int randomValue = rnd.nextInt(10000) % 9;
-			
+			int randomValue = (rnd.nextInt(10000) % 50) -20;
+
 			InetAddress IPAddress = InetAddress.getByName("localhost");
 			byte[] sendCryptoData = new byte[1024];
 			String sentence = "27,1," + randomValue + ",Temperature," + getTime() + ",";
@@ -67,7 +66,7 @@ public class SendUDP {
 
 		final SecretKey key = new SecretKeySpec(keyBytes, "TripleDES");
 		final IvParameterSpec iv = new IvParameterSpec(new byte[8]);
-		final Cipher cipher = Cipher.getInstance("DESede/CBC/Nopadding");
+		final Cipher cipher = Cipher.getInstance("TripleDES/CBC/Nopadding");
 		cipher.init(Cipher.ENCRYPT_MODE, key, iv);
 		final byte[] temp = new byte[1024];
 		final byte[] plainTextBytes = message.getBytes("utf-8");

@@ -1,10 +1,12 @@
 $(function () {
+
     var chart;
     var data_table = [];
     var date_table = [];
     var average_table = [];
     var average = 0;
     var temp = 0;
+
     $(document).ready(function() {
 
                 Highcharts.setOptions({
@@ -44,10 +46,23 @@ $(function () {
                         var seriesAverage = this.series[1];
                         var length = sensor_data.length;
                         var totalValue = 0;
-                        var nextValue;
+                        var numberOfElements = sensor_data.length;
                         for (var i = 0; i < sensor_data.length; i++) {
                             totalValue += parseInt(sensor_data[i].value);
                         };
+
+                        var faye = new Faye.Client('http://localhost:9292/faye');
+                       // alert(sensor_data[0].sensor_id);
+                        faye.subscribe("/sensor/" + sensor_data[0].sensor_id + "/new", function(object) {
+                        
+                            var x = new Date(object.created_at).getTime(),
+                            y = parseInt(object.value);
+                            totalValue += y;
+                            numberOfElements++;
+                            series.addPoint([x, y], true, false);
+                            seriesAverage.addPoint([x, totalValue/numberOfElements], true, false);
+                        });
+/*
                         setInterval(function() {
                            $.ajax({url : '/sensors/' + sensor_id + '.json', type : 'GET'}).success(function(new_data) {
                                 //alert(data);
@@ -62,6 +77,7 @@ $(function () {
                                     
                                     var x = new Date((split1[0] + ' ' +split2[0])).getTime(), // current time
                                     y = parseInt(new_data[nextElement].value);
+                                    alert("Interval: " + x);
                                    series.addPoint([x, y], true, false);
                                    seriesAverage.addPoint([x, totalValue/nextElement], true, false);
 
@@ -72,7 +88,7 @@ $(function () {
                             })
 
                         }, 10000);
-
+*/
                     }
 
                 }

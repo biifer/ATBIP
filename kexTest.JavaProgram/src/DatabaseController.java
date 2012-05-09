@@ -1,9 +1,16 @@
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.security.*;
 import java.sql.*;
 import java.util.Arrays;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+
+import net.sf.json.JSONObject;
 
 public class DatabaseController implements Runnable {
 
@@ -70,7 +77,7 @@ public class DatabaseController implements Runnable {
 					addSensorReadings();
 
 				}
-
+				pushToFaye();
 			}
 
 		}
@@ -188,6 +195,23 @@ public class DatabaseController implements Runnable {
 			return e.toString() + "\nBad message!";
 		}
 
+	}
+	public void pushToFaye() throws IOException{
+		URL url = new URL("http://localhost:9292/faye");
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setDoOutput(true);
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestMethod("POST");
+		conn.connect();
+		JSONObject arrayMessageJSON = new JSONObject();
+		JSONObject elementJSON = new JSONObject();
+		elementJSON.put("value", value);
+		elementJSON.put("created_at", time);
+		arrayMessageJSON.put("channel", "/sensor/" + sensor_id + "/new");
+		arrayMessageJSON.put("data", elementJSON.toString());
+		conn.getOutputStream().write(arrayMessageJSON.toString().getBytes("UTF-8"));
+		conn.getInputStream();
+		conn.disconnect();
 	}
 
 }
