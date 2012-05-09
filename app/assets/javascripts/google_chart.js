@@ -2,11 +2,11 @@ $(function () {
 
   $(document).ready(function() {
 
-    $.get("/sensors/"+ sensor_id +".json").success(function(sensor_data) {
+    $.get("/sensors/"+ sensor_url_id +".json").success(function(sensor_data) {
     var length = sensor_data.length;
     setInterval(function() {
     
-      $.ajax({url : '/sensors/' + sensor_id + '.json', type : 'GET'}).success(function(new_data) {
+      $.ajax({url : '/sensors/' + sensor_url_id + '.json', type : 'GET'}).success(function(new_data) {
       if(length != new_data.length){
         length = new_data.length;
 

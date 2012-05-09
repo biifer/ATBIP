@@ -6,8 +6,8 @@
 	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-beanutils-1.7.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-collections.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-lang.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/ezmorph.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/json-lib-2.2.2-jdk15.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

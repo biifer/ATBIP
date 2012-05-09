@@ -80,7 +80,8 @@
 </script>
 <script type='text/javascript'>
       // params that will be used in the external .js scripts!
-      var sensor_id = <%= @sensor.id %>;
+      var sensor_url_id = <%= @sensor.id %>;
+      var sensor_id = '<%= @sensor.sensor_id %>'
       var min_value = <%= getMin(@sensor_data) %>;
       var max_value = <%= getMax(@sensor_data) %>;
 </script>

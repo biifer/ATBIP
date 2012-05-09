@@ -19,7 +19,7 @@ $(function () {
 
         });
 
-        $.get("/sensors/"+ sensor_id +".json").success(function(sensor_data) {
+        $.get("/sensors/"+ sensor_url_id +".json").success(function(sensor_data) {
             
 
 
@@ -53,7 +53,7 @@ $(function () {
 
                         var faye = new Faye.Client('http://localhost:9292/faye');
                        // alert(sensor_data[0].sensor_id);
-                        faye.subscribe("/sensor/" + sensor_data[0].sensor_id + "/new", function(object) {
+                        faye.subscribe("/sensor/" + sensor_id + "/new", function(object) {
                         
                             var x = new Date(object.created_at).getTime(),
                             y = parseInt(object.value);
@@ -103,7 +103,7 @@ $(function () {
 
             subtitle: {
 
-                text: 'Source (Sensor ID): ' + sensor_id
+                text: 'Source (Sensor ID): ' + sensor_url_id
 
             },
 
