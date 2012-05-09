@@ -1,91 +1,13 @@
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-<script type="text/javascript">
-
-
-  /* ***********************************************
-	Receives the sensor object and extracts an INT 
-	This could be used to add sensor data to the chart 
-  ************************************************ */
-  google.load("visualization", "1", {packages:["corechart"]});
-  var sensor_id = <%= @sensor.id %>
-  google.setOnLoadCallback(drawChart);
-  function drawChart() {
-
-    var chartData = new google.visualization.DataTable();
-    chartData.addColumn('string', 'Date');
-    chartData.addColumn('number', '<%= h @sensor.sensor_type -%>');
-    chartData.addColumn('number', 'Average');
-    chartData.addColumn({type:'string', role:'tooltip'});
-    <%# This is to make the average line dotted %>
-    chartData.addColumn({type:'boolean', role:'certainty'});
-
-    chartData.addRows(<%= h @sensor_data.length -%>);
-
-    var i = 0;
-    <% @sensor_data.each do |sensor| %>
-      chartData.setCell(i, 0, '<%= sensor.created_at %>');
-      chartData.setCell(i, 1, <%= sensor.value %>);
-      chartData.setCell(i, 2, <%= getAverage(@sensor_data) %>);
-      <%# This is to make the average line dotted %>
-      chartData.setCell(i, 3, 'Average temperature: <%= getAverage(@sensor_data) %>')
-      chartData.setCell(i, 4, false)
-
-      i++;
-    <% end %>
-
-    var options = {
-      title: '<%= h @sensor.sensor_type -%>'
-    };
-
-    var line_chart = new google.visualization.LineChart(document.getElementById('line_chart_div'));
-    line_chart.draw(chartData, options);
-  }
-</script>
 <script type='text/javascript'>
       google.load('visualization', '1', {packages:['gauge']});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var maxGaugeData = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Max °C', <%= getMax(@sensor_data) %>]
-        ]);
-        var minGaugeData = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Min °C', <%= getMin(@sensor_data) %>]
-        ]);
-        var currentGaugeData = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Current °C', <%= getCurrent(@sensor_data) %>]
-        ]);
 
-        var options = {
-          <%# The 'greenColor' is in fact blue, google chart does not provide any blue color option %>
-          greenColor: '#5C67FA',
-          greenFrom: -40, greenTo: -20,
-          yellowFrom: 30, yellowTo: 40,
-          redFrom: 40, redTo: 50,
-          minorTicks: 1, 
-          min: -40,
-          max: 50,
-        };
-
-        var max_gauge_chart = new google.visualization.Gauge(document.getElementById('max_gauge_div'));
-        var min_gauge_chart = new google.visualization.Gauge(document.getElementById('min_gauge_div'));
-        var current_gauge_chart = new google.visualization.Gauge(document.getElementById('current_gauge_div'));
-
-        max_gauge_chart.draw(maxGaugeData, options);
-        min_gauge_chart.draw(minGaugeData, options);
-        current_gauge_chart.draw(currentGaugeData, options);
-      }
-</script>
-<script type='text/javascript'>
       // params that will be used in the external .js scripts!
       var sensor_url_id = <%= @sensor.id %>;
       var sensor_id = '<%= @sensor.sensor_id %>'
       var min_value = <%= getMin(@sensor_data) %>;
       var max_value = <%= getMax(@sensor_data) %>;
 </script>
-
 <script src="http://code.highcharts.com/highcharts.js"></script>
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
 
