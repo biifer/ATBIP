@@ -31,7 +31,7 @@ public class SendUDP {
 
 			InetAddress IPAddress = InetAddress.getByName("localhost");
 			byte[] sendCryptoData = new byte[1024];
-			String sentence = "27,1," + randomValue + ",Temperature," + getTime() + ",";
+			String sentence = "27,3," + randomValue + ",Temperature," + getTime() + ",";
 			sendCryptoData = test.encrypt(sentence);
 			DatagramPacket sendPacket = new DatagramPacket(sendCryptoData, sendCryptoData.length, IPAddress, 9876);
 			System.out.println(sendCryptoData);

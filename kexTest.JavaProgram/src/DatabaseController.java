@@ -6,6 +6,9 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.security.*;
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import javax.crypto.*;
 import javax.crypto.spec.*;
@@ -21,9 +24,11 @@ public class DatabaseController implements Runnable {
 	byte[] encryptedMessage;
 	PreparedStatement preparedStatement;
 	Exception badGateway = null;
+	PoolOfTasks poolOfTasks;
 
-	public DatabaseController(byte[] encryptedMessage) throws SQLException {
-		this.encryptedMessage = encryptedMessage;
+	public DatabaseController(PoolOfTasks poolOfTasks) throws SQLException {
+		//		this.encryptedMessage = encryptedMessage;
+		this.poolOfTasks = poolOfTasks;
 		this.url = "jdbc:mysql://biifer.mine.nu:3306/development3";
 		this.connection = DriverManager.getConnection(url, "ivan",
 				"eKufsfrQMNrSyB4K");
@@ -35,57 +40,71 @@ public class DatabaseController implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.println("Received encoded message: " + encryptedMessage);
-		String sentence = new String(decrypt(encryptedMessage));
-		System.out.println("Decrypted message: " + sentence.trim() + "\n");
-		String[] splitSentence = sentence.split(",");
-		gateway_id = splitSentence[0];
-		sensor_id = splitSentence[1];
-		value = splitSentence[2];
-		type = splitSentence[3];
-		time = splitSentence[4];
+		while(true){
+			try {
+				encryptedMessage = poolOfTasks.getTask();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			System.out.println("Received encoded message: " + encryptedMessage);
+			String sentence = new String(decrypt(encryptedMessage));
+			System.out.println("Decrypted message: " + sentence.trim() + "\n");
+			String[] splitSentence = sentence.split(",");
+			gateway_id = splitSentence[0];
+			sensor_id = splitSentence[1];
+			value = splitSentence[2];
+			type = splitSentence[3];
+			time = splitSentence[4];
 
-		System.out.println("DatabaseController received: \nGateway: "
-				+ gateway_id + "\nSensor: " + sensor_id + "\nValue: " + value
-				+ "\nType: " + type + "\nTime: " + time + "\n");
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			System.out.println("DatabaseController received: \nGateway: "
+					+ gateway_id + "\nSensor: " + sensor_id + "\nValue: " + value
+					+ "\nType: " + type + "\nTime: " + time + "\n");
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
 
-			// Checks if the gateway exists. If NOT throw badGateway exception
-			if (!validGateway(gateway_id)) {
-				throw badGateway;
-			} else {
-				// If the sensor already exists, add sensor data to the existing
-				// sensor
-				if (validSensor(sensor_id)) {
+				statement = connection.createStatement();
+				resultSet = statement.executeQuery(				"SELECT id AS gateway_id, " +
+						"(SELECT sensor_id FROM sensors WHERE sensor_id = '" + sensor_id + "' AND gateway_id = " + gateway_id + ") AS valid, " +
+						"(SELECT created_at FROM " +
+						"(SELECT id, created_at FROM sensor_readings WHERE sensor_id = '"+ sensor_id +"' AND gateway_id =" + gateway_id + " ORDER BY id DESC LIMIT 1) AS timetable)" +
+						" AS timestamp FROM gateways WHERE id = "+ gateway_id);
 
-					System.out.println("Adding data to sensor with id: "
-							+ sensor_id);
+				// Checks if the gateway exists. If NOT throw badGateway exception
+				if (!resultSet.next()) {
+					throw badGateway;
+				} else {
+					// If the sensor already exists, add sensor data to the existing
+					// sensor
+					if (resultSet.getString(2) != null) {
 
-					addSensorReadings();
+						System.out.println("Adding data to sensor with id: "
+								+ sensor_id);
 
+						addSensorReadings(resultSet.getString(3));
+
+					}
+					// If the sensor does NOT exist, create a new sensor first and
+					// then add the sensor readings
+					else {
+
+						System.out.println("Adding new sensor to gateway: "
+								+ gateway_id + " and data to sensor with id: "
+								+ sensor_id);
+
+						addSensor();
+						addSensorReadings(resultSet.getString(3));
+
+					}
 				}
-				// If the sensor does NOT exist, create a new sensor first and
-				// then add the sensor readings
-				else {
 
-					System.out.println("Adding new sensor to gateway: "
-							+ gateway_id + " and data to sensor with id: "
-							+ sensor_id);
-
-					addSensor();
-					addSensorReadings();
-
-				}
-				pushToFaye();
 			}
 
-		}
-
-		catch (SQLException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			System.out.println("Not a valid gateway!");
+			catch (SQLException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("Not a valid gateway!");
+			}
 		}
 	}
 
@@ -111,6 +130,7 @@ public class DatabaseController implements Runnable {
 		resultSet = statement.executeQuery("SELECT * " + "from sensors "
 				+ "where sensor_id=" + "'" + sensor + "'" + " AND gateway_id="
 				+ gateway_id);
+
 		if (resultSet.next()) {
 			System.out.println("A sensor with id: " + sensor + " exists!");
 			return true;
@@ -122,18 +142,38 @@ public class DatabaseController implements Runnable {
 
 	}
 
-	public void addSensorReadings() throws SQLException {
+	public void addSensorReadings(String timestamp) throws SQLException, ParseException, IOException {
+		if(timestamp != null){
+			DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			long timestampLong = sdf.parse(timestamp).getTime();
+			long timeLong = sdf.parse(time).getTime();
+			System.out.println("Timestamp: " + timestamp + ", " + timestampLong + "\n" + "Time: " + time + ", " + timeLong);
+			if(timeLong > (timestampLong + 2000)){
+				String gateway = "INSERT INTO sensor_readings (sensor_id, gateway_id, value, created_at, updated_at) VALUES( ?, ?, ?, ?, ?)";
+				preparedStatement = connection.prepareStatement(gateway);
+				preparedStatement.setString(1, sensor_id);
+				preparedStatement.setString(2, gateway_id);
+				preparedStatement.setString(3, value);
+				preparedStatement.setString(4, time);
+				preparedStatement.setString(5, time);
+				preparedStatement.executeUpdate();
 
-		String gateway = "INSERT INTO sensor_readings (sensor_id, gateway_id, value, created_at, updated_at) VALUES( ?, ?, ?, ?, ?)";
-		preparedStatement = connection.prepareStatement(gateway);
-		preparedStatement.setString(1, sensor_id);
-		preparedStatement.setString(2, gateway_id);
-		preparedStatement.setString(3, value);
-		preparedStatement.setString(4, time);
-		preparedStatement.setString(5, time);
-		preparedStatement.executeUpdate();
+				preparedStatement.close();
+				pushToFaye();
+			}
+		}else{
+			String gateway = "INSERT INTO sensor_readings (sensor_id, gateway_id, value, created_at, updated_at) VALUES( ?, ?, ?, ?, ?)";
+			preparedStatement = connection.prepareStatement(gateway);
+			preparedStatement.setString(1, sensor_id);
+			preparedStatement.setString(2, gateway_id);
+			preparedStatement.setString(3, value);
+			preparedStatement.setString(4, time);
+			preparedStatement.setString(5, time);
+			preparedStatement.executeUpdate();
 
-		preparedStatement.close();
+			preparedStatement.close();
+			pushToFaye();
+		}
 	}
 
 	public void addSensor() throws SQLException {

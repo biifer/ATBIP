@@ -9,7 +9,11 @@ import java.sql.SQLException;
  *
  */
 public class ServerUDP {
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, SQLException {
+		
+		int numberOfThreads = Integer.parseInt(args[0]);
+		PoolOfTasks poolOfTasks = new PoolOfTasks();
+		
 		/*
 		 * Creates a new socket that will receive the UDP messages.
 		 */
@@ -17,6 +21,11 @@ public class ServerUDP {
 		/*
 		 * Entering the loop that will run for ever.
 		 */
+		
+		for (int i = 0; i < numberOfThreads; i++) {
+			new Thread(new DatabaseController(poolOfTasks)).start();
+		}
+		
 		while (true) {
 			/*
 			 * Creates a byte array of the fixed size 1024 Bytes.
@@ -31,18 +40,11 @@ public class ServerUDP {
 			/*
 			 * Saves the received package in a byte array. 
 			 */
-			byte[] encryptedMessage = receivePacket.getData();
 			
-			System.out
-					.println("Spawning new thread to handle incoming UDP package\n");
-			try {
-				/*
-				 * Creates a new thread that will decrypt the message and at the data to the databae.
-				 */
-				new Thread(new DatabaseController(encryptedMessage)).start();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			/*
+			 * Creates a new thread that will decrypt the message and at the data to the databae.
+			 */
+			poolOfTasks.addTask(receivePacket.getData());
 		}
 	}
 }

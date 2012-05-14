@@ -50,7 +50,7 @@ class GatewaysController < ApplicationController
 
     respond_to do |format|
       format.html # new.html.erb
-      format.json { render json: @gateway }
+      format.json { render json: @gateway.id }
     end
   end
 

@@ -51,6 +51,11 @@ class SensorsController < ApplicationController
   # GET /sensors/1/edit
   def edit
     @sensor = Sensor.find(params[:id])
+    @gateway_id = @sensor.gateway_id
+    respond_to do |format|
+      format.html
+      format.json { render json:  @gateway_id}
+    end
   end
 
   # POST /sensors
