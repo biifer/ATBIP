@@ -1,6 +1,11 @@
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.AlgorithmParameterSpec;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -18,29 +23,22 @@ public class SendUDP {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
 
 		DatagramSocket clientSocket;
 		try {
-			SendUDP test = new SendUDP();
 			clientSocket = new DatagramSocket();
-
+			
 			Random rnd = new Random();
 			int randomValue = (rnd.nextInt(10000) % 50) -20;
-
+			
 			InetAddress IPAddress = InetAddress.getByName("localhost");
-			byte[] sendCryptoData = new byte[1024];
+			byte[] cryptoData = new byte[1024];
 			String sentence = "27,3," + randomValue + ",Temperature," + getTime() + ",";
-			sendCryptoData = test.encrypt(sentence);
-			DatagramPacket sendPacket = new DatagramPacket(sendCryptoData, sendCryptoData.length, IPAddress, 9876);
-			System.out.println(sendCryptoData);
-			System.out.println(sendCryptoData.length);
+			cryptoData = encryptAES(sentence);
+			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 9876);
+			System.out.println("Sending encrypted message: " + cryptoData.toString());
 			clientSocket.send(sendPacket);
 			clientSocket.close();
-
-
-
 
 		}			 
 		catch (SocketException e) {
@@ -55,27 +53,56 @@ public class SendUDP {
 		}
 
 	}
-	private byte[] encrypt(String message) throws Exception {
-		final MessageDigest md = MessageDigest.getInstance("md5");
-		final byte[] digestOfPassword = md.digest("HG58YZ3CR7"
-				.getBytes("utf-8"));
-		final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-		for (int j = 0, k = 16; j < 8;) {
-			keyBytes[k++] = keyBytes[j++];
-		}
+	private static byte[] encryptAES(String message)  {
+		byte[] encryptedMessage = new byte[1024];
+		final byte[] temp = new byte[1008];
+		final byte[] encryptedMessageToReturn = new byte[1024];
+		
+		try {
+			SecretKeySpec skeySpec = new SecretKeySpec("PK80åä¨q''eto0z<".getBytes(), "AES");
+			Cipher cipher = Cipher.getInstance("AES/CBC/Nopadding");
+			
+			AlgorithmParameterSpec paramSpec = new IvParameterSpec("IvAnQQ-piece*pie".getBytes());
+			
+			cipher.init(Cipher.ENCRYPT_MODE, skeySpec, paramSpec);
 
-		final SecretKey key = new SecretKeySpec(keyBytes, "TripleDES");
-		final IvParameterSpec iv = new IvParameterSpec(new byte[8]);
-		final Cipher cipher = Cipher.getInstance("TripleDES/CBC/Nopadding");
-		cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-		final byte[] temp = new byte[1024];
-		final byte[] plainTextBytes = message.getBytes("utf-8");
-		for(int i = 0; i < plainTextBytes.length; i++){
-			temp[i] = plainTextBytes[i];
+			final byte[] plainTextBytes = message.getBytes("UTF-8");
+			// Appends the plain message to a byte string with the size 1008 to be encrypted.
+			for(int i = 0; i < plainTextBytes.length; i++){
+				temp[i] = plainTextBytes[i];
+			}
+			encryptedMessage = cipher.doFinal(temp);
+			
+			// Creates a message digest for the encrypted message.
+			Mac md = Mac.getInstance("HmacMD5");
+			md.init(skeySpec);
+			md.update(encryptedMessage);
+			byte[] digest = md.doFinal();
+			
+			// Adds the encrypted message and the digest to the byte string to be sent.
+			for(int i = 0; i < 1008; i++){
+				encryptedMessageToReturn[i] = encryptedMessage[i];
+			}
+			for(int i = 0; i < 16; i++){
+				encryptedMessageToReturn[1008+i] = digest[i];
+			}
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			e.printStackTrace();
+		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		final byte[] cipherText = cipher.doFinal(temp);
-
-		return cipherText;
+		return encryptedMessageToReturn;
 	}
 	public static String getTime() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

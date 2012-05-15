@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.security.*;
+import java.security.spec.AlgorithmParameterSpec;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -12,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import javax.print.attribute.standard.OrientationRequested;
 
 import net.sf.json.JSONObject;
 
@@ -23,11 +25,12 @@ public class DatabaseController implements Runnable {
 	Statement statement;
 	byte[] encryptedMessage;
 	PreparedStatement preparedStatement;
-	Exception badGateway = null;
+	Exception badGateway = new Exception("Not a valid gateway!");
+	Exception badMessageDigestException = new Exception("Bad MessageDigest!");
 	PoolOfTasks poolOfTasks;
+	String decryptedMessage = null;
 
 	public DatabaseController(PoolOfTasks poolOfTasks) throws SQLException {
-		//		this.encryptedMessage = encryptedMessage;
 		this.poolOfTasks = poolOfTasks;
 		this.url = "jdbc:mysql://biifer.mine.nu:3306/development3";
 		this.connection = DriverManager.getConnection(url, "ivan",
@@ -47,19 +50,17 @@ public class DatabaseController implements Runnable {
 				e1.printStackTrace();
 			}
 			System.out.println("Received encoded message: " + encryptedMessage);
-			String sentence = new String(decrypt(encryptedMessage));
-			System.out.println("Decrypted message: " + sentence.trim() + "\n");
-			String[] splitSentence = sentence.split(",");
-			gateway_id = splitSentence[0];
-			sensor_id = splitSentence[1];
-			value = splitSentence[2];
-			type = splitSentence[3];
-			time = splitSentence[4];
-
-			System.out.println("DatabaseController received: \nGateway: "
-					+ gateway_id + "\nSensor: " + sensor_id + "\nValue: " + value
-					+ "\nType: " + type + "\nTime: " + time + "\n");
 			try {
+				decryptedMessage = decryptAES(encryptedMessage);
+
+				System.out.println("Decrypted message: " + decryptedMessage.trim() );
+				String[] splitSentence = decryptedMessage.split(",");
+				gateway_id = splitSentence[0];
+				sensor_id = splitSentence[1];
+				value = splitSentence[2];
+				type = splitSentence[3];
+				time = splitSentence[4];
+	
 				Class.forName("com.mysql.jdbc.Driver");
 
 				statement = connection.createStatement();
@@ -78,7 +79,7 @@ public class DatabaseController implements Runnable {
 					if (resultSet.getString(2) != null) {
 
 						System.out.println("Adding data to sensor with id: "
-								+ sensor_id);
+								+ sensor_id + "\n");
 
 						addSensorReadings(resultSet.getString(3));
 
@@ -89,7 +90,7 @@ public class DatabaseController implements Runnable {
 
 						System.out.println("Adding new sensor to gateway: "
 								+ gateway_id + " and data to sensor with id: "
-								+ sensor_id);
+								+ sensor_id + "\n");
 
 						addSensor();
 						addSensorReadings(resultSet.getString(3));
@@ -103,43 +104,8 @@ public class DatabaseController implements Runnable {
 				e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.println("Not a valid gateway!");
 			}
 		}
-	}
-
-	public boolean validGateway(String gateway) throws SQLException {
-
-		statement = connection.createStatement();
-		resultSet = statement.executeQuery("SELECT * " + "from gateways "
-				+ "where id=" + gateway);
-		if (resultSet.next()) {
-			System.out.println("A gateway with id: " + gateway + " exists!");
-			return true;
-		} else {
-			System.out.println("A gateway with id: " + gateway
-					+ " does NOT exists!");
-			return false;
-		}
-
-	}
-
-	public boolean validSensor(String sensor) throws SQLException {
-
-		statement = connection.createStatement();
-		resultSet = statement.executeQuery("SELECT * " + "from sensors "
-				+ "where sensor_id=" + "'" + sensor + "'" + " AND gateway_id="
-				+ gateway_id);
-
-		if (resultSet.next()) {
-			System.out.println("A sensor with id: " + sensor + " exists!");
-			return true;
-		} else {
-			System.out.println("A sensor with id: " + sensor
-					+ " does NOT exists!");
-			return false;
-		}
-
 	}
 
 	public void addSensorReadings(String timestamp) throws SQLException, ParseException, IOException {
@@ -147,7 +113,6 @@ public class DatabaseController implements Runnable {
 			DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			long timestampLong = sdf.parse(timestamp).getTime();
 			long timeLong = sdf.parse(time).getTime();
-			System.out.println("Timestamp: " + timestamp + ", " + timestampLong + "\n" + "Time: " + time + ", " + timeLong);
 			if(timeLong > (timestampLong + 2000)){
 				String gateway = "INSERT INTO sensor_readings (sensor_id, gateway_id, value, created_at, updated_at) VALUES( ?, ?, ?, ?, ?)";
 				preparedStatement = connection.prepareStatement(gateway);
@@ -190,52 +155,63 @@ public class DatabaseController implements Runnable {
 		preparedStatement.close();
 	}
 
-	private static String decrypt(byte[] message) {
+	private String decryptAES(byte[] message){
+		SecretKeySpec skeySpec = new SecretKeySpec("PK80Â‰®q''eto0z<".getBytes(), "AES");
+		Cipher cipher;
+		byte[] original = null;
 
-		try {
-			final MessageDigest md = MessageDigest.getInstance("md5");
-			final byte[] digestOfPassword = md.digest("HG58YZ3CR7"
-					.getBytes("utf-8"));
-			final byte[] keyBytes = Arrays.copyOf(digestOfPassword, 24);
-			for (int j = 0, k = 16; j < 8;) {
-				keyBytes[k++] = keyBytes[j++];
-			}
-
-			final SecretKey key = new SecretKeySpec(keyBytes, "TripleDES");
-			final IvParameterSpec iv = new IvParameterSpec(new byte[8]);
-			final Cipher decipher = Cipher
-					.getInstance("TripleDES/CBC/Nopadding");
-			decipher.init(Cipher.DECRYPT_MODE, key, iv);
-
-			// final byte[] encData = new
-			// sun.misc.BASE64Decoder().decodeBuffer(message);
-			final byte[] plainText = decipher.doFinal(message);
-			return new String(plainText, "UTF-8");
-
-		} catch (NoSuchAlgorithmException e) {
-
-			return e.toString();
-		} catch (UnsupportedEncodingException e) {
-
-			return e.toString();
-		} catch (NoSuchPaddingException e) {
-
-			return e.toString();
-		} catch (InvalidKeyException e) {
-
-			return e.toString();
-		} catch (InvalidAlgorithmParameterException e) {
-
-			return e.toString();
-		} catch (IllegalBlockSizeException e) {
-
-			return e.toString();
-		} catch (BadPaddingException e) {
-
-			return e.toString() + "\nBad message!";
+		/**
+		 * Extracts the encrypted message and the message digest from the message received.
+		 */
+		byte[] digest = new byte[16];
+		byte[] encryptedMessage = new byte[1008];
+		for(int i = 0; i < 1008; i++){
+			encryptedMessage[i] = message[i];
+		}
+		for(int i = 0; i < 16; i++){
+			digest[i] = message[1008+i];
 		}
 
+		try {
+
+			Mac md = Mac.getInstance("HmacMD5");
+			md.init(skeySpec);
+			md.update(encryptedMessage);		
+			if(!MessageDigest.isEqual(digest, md.doFinal())){
+				throw badMessageDigestException;
+			}
+			AlgorithmParameterSpec paramSpec = new IvParameterSpec("IvAnQQ-piece*pie".getBytes());
+			cipher = Cipher.getInstance("AES/CBC/Nopadding");
+
+			cipher.init(Cipher.DECRYPT_MODE, skeySpec, paramSpec);
+			original = cipher.doFinal(encryptedMessage);
+
+
+			return new String(original);
+
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return null;
+		} catch (NoSuchPaddingException e) {
+			e.printStackTrace();
+			return null;
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalBlockSizeException e) {
+			e.printStackTrace();
+			return null;
+		} catch (BadPaddingException e) {
+			e.printStackTrace();
+			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+
+
 	}
+
 	public void pushToFaye() throws IOException{
 		URL url = new URL("http://localhost:9292/faye");
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
