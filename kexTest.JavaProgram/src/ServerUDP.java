@@ -15,7 +15,7 @@ public class ServerUDP {
 		if(args.length > 0){
 			numberOfThreads = Integer.parseInt(args[0]);
 		}
-		System.out.println(numberOfThreads + " ***");
+		System.out.println("Server started with: " +  numberOfThreads + " worker threads.");
 		PoolOfTasks poolOfTasks = new PoolOfTasks();
 		
 		/*
