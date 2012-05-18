@@ -52,7 +52,7 @@ public class SendUDP {
 		final byte[] encryptedMessageToReturn = new byte[1024];
 		
 		try {
-			SecretKeySpec skeySpec = new SecretKeySpec("PK80Â‰®q''eto0z<".getBytes(), "AES");
+			SecretKeySpec skeySpec = new SecretKeySpec("PK80111q''eto0z<".getBytes(), "AES");
 			Cipher cipher = Cipher.getInstance("AES/CBC/Nopadding");
 			
 			AlgorithmParameterSpec paramSpec = new IvParameterSpec("IvAnQQ-piece*pie".getBytes());

@@ -148,7 +148,7 @@ public class DatabaseController implements Runnable {
 	}
 
 	private String decryptAES(byte[] message){
-		SecretKeySpec skeySpec = new SecretKeySpec("PK80Â‰®q''eto0z<".getBytes(), "AES");
+		SecretKeySpec skeySpec = new SecretKeySpec("PK80111q''eto0z<".getBytes(), "AES");
 		Cipher cipher;
 		byte[] original = null;
 
