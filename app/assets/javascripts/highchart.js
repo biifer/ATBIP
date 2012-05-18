@@ -51,7 +51,7 @@ $(function () {
                             totalValue += parseInt(sensor_data[i].value);
                         };
 
-                        var faye = new Faye.Client('http://localhost:9292/faye');
+                        var faye = new Faye.Client('http://biifer.mine.nu:9292/faye');
                        // alert(sensor_data[0].sensor_id);
                         faye.subscribe("/sensor/" + sensor_id + "/new", function(object) {
                         

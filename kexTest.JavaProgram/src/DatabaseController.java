@@ -213,7 +213,7 @@ public class DatabaseController implements Runnable {
 	}
 
 	public void pushToFaye() throws IOException{
-		URL url = new URL("http://localhost:9292/faye");
+		URL url = new URL("http://biifer.mine.nu:9292/faye");
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setDoOutput(true);
 		conn.setRequestProperty("Content-Type", "application/json");
@@ -226,7 +226,6 @@ public class DatabaseController implements Runnable {
 		arrayMessageJSON.put("channel", "/sensor/" + sensor_id + "/new");
 		arrayMessageJSON.put("data", elementJSON.toString());
 		conn.getOutputStream().write(arrayMessageJSON.toString().getBytes("UTF-8"));
-		conn.getInputStream();
 		conn.disconnect();
 	}
 

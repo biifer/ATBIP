@@ -36,7 +36,7 @@ $(function () {
         min_gauge_chart.draw(minGaugeData, options);
         current_gauge_chart.draw(currentGaugeData, options);
 
-      var faye = new Faye.Client('http://localhost:9292/faye');
+      var faye = new Faye.Client('http://biifer.mine.nu:9292/faye');
       faye.subscribe("/sensor/" + sensor_id + "/new", function(object) {
         currentGaugeData.setValue(0, 0, parseInt(object.value));
         current_gauge_chart.draw(currentGaugeData, options);
