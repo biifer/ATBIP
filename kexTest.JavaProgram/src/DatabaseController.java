@@ -1,19 +1,11 @@
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
+import java.net.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.text.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
-import javax.print.attribute.standard.OrientationRequested;
 
 import net.sf.json.JSONObject;
 
