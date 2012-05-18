@@ -1,19 +1,12 @@
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Random;
-
+import java.util.*;
 import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.*;
 
 
 public class SendUDP {
@@ -35,7 +28,7 @@ public class SendUDP {
 			byte[] cryptoData = new byte[1024];
 			String sentence = "27,3," + randomValue + ",Temperature," + getTime() + ",";
 			cryptoData = encryptAES(sentence);
-			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 9876);
+			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 50000);
 			System.out.println("Sending encrypted message: " + cryptoData.toString());
 			clientSocket.send(sendPacket);
 			clientSocket.close();
