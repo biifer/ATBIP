@@ -46,11 +46,14 @@ $(function () {
                         var length = sensor_data.length;
                         var totalValue = 0;
                         var numberOfElements = sensor_data.length;
+                        var readingRange = null;
                         for (var i = 0; i < sensor_data.length; i++) {
                             totalValue += parseInt(sensor_data[i].value);
                         };
 
                         $("button#today").click(function(){
+                            if(readingRange != 'today'){
+                                readingRange = 'today';
                             $.get("/sensors/today/"+ sensor_url_id +".json").success(function(sensor_data_today) {
                                 if(sensor_data_today.length == 0){
                                     
@@ -74,10 +77,13 @@ $(function () {
                                         seriesAverage.addPoint([x, total/(i+1)], true, false);
                                     };
                                 };
-                            });                      
+                            });
+                            };                      
                         });
 
                         $("button#all").click(function(){
+                            if(readingRange != 'all'){
+                                readingRange = 'all';
                             $.get("/sensors/"+ sensor_url_id +".json").success(function(sensor_data) {
                             var i = 0;
                             while(series.data.length != 0){
@@ -99,6 +105,7 @@ $(function () {
                                 
                             };
                             });
+                        };
                         });
 
                         var faye = new Faye.Client('http://biifer.mine.nu:9292/faye');

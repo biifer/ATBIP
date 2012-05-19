@@ -1,17 +1,28 @@
 $(function () {
   $(document).ready(function() {
 
-  var options = {
-    greenColor: '#5C67FA',
-    greenFrom: -40, greenTo: -20,
-    yellowFrom: 30, yellowTo: 40,
-    redFrom: 40, redTo: 50,
-    minorTicks: 1, 
-    min: -40,
-    max: 50,
-  };
+
 
     $.get("/sensors/"+ sensor_url_id +".json").success(function(sensor_data) {
+      if(sensor_type == 'Temperature'){
+        var options = {
+          greenColor: '#5C67FA',
+          greenFrom: -40, greenTo: -20,
+          yellowFrom: 30, yellowTo: 40,
+          redFrom: 40, redTo: 50,
+          minorTicks: 1, 
+          min: -40,
+          max: 50,
+        };
+      }else if(sensor_type == 'Weight'){
+        var options = {
+
+          minorTicks: 1, 
+          min: 0,
+          max: 150,
+        };
+      }
+
       var length = sensor_data.length;
       var minGaugeData = new google.visualization.DataTable();
       minGaugeData.addColumn('number', 'Min ' + sensor_unit);
