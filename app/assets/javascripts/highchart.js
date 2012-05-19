@@ -32,7 +32,7 @@ $(function () {
 
                 renderTo: 'highchart',
                 zoomType: 'x',
-                type: 'spline',
+                type: 'line',
                 backgroundColor: 'transparent',
 
                                 events: {

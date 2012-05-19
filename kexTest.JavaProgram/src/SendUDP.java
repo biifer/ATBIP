@@ -24,12 +24,15 @@ public class SendUDP {
 			Random rnd = new Random();
 			int randomValue = (rnd.nextInt(10000) % 50) -20;
 			
-			InetAddress IPAddress = InetAddress.getByName(args[0]);
+			InetAddress IPAddress = InetAddress.getByName("localhost");
+			if (args.length == 1) {
+				IPAddress = InetAddress.getByName(args[0]);
+			}
 			byte[] cryptoData = new byte[1024];
 			String sentence = "27,3," + randomValue + ",Temperature," + getTime() + ",";
 			cryptoData = encryptAES(sentence);
 			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 50000);
-			System.out.println("Sending encrypted message: " + cryptoData.toString() + "to: " + args[0]);
+			System.out.println("Sending encrypted message: " + cryptoData.toString() + "\nto: " + args[0]);
 			clientSocket.send(sendPacket);
 			clientSocket.close();
 
