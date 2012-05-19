@@ -20,7 +20,7 @@ public class ServerUDP {
 		
 		/*
 		 * Creates a new socket that will receive the UDP messages.
-		 */
+		 */ 
 		DatagramSocket serverSocket = new DatagramSocket(50000);
 		/*
 		 * Entering the loop that will run for ever.

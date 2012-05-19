@@ -6,7 +6,6 @@ $(function () {
     var average_table = [];
     var average = 0;
     var temp = 0;
-
     $(document).ready(function() {
 
                 Highcharts.setOptions({
@@ -32,7 +31,7 @@ $(function () {
 
                 renderTo: 'highchart',
                 zoomType: 'x',
-                type: 'spline',
+                type: 'line',
                 backgroundColor: 'transparent',
 
                                 events: {
@@ -51,6 +50,55 @@ $(function () {
                             totalValue += parseInt(sensor_data[i].value);
                         };
 
+                        $("button#today").click(function(){
+
+                            
+                            while(series.data.length != 0){
+                                series.data[0].remove(true);
+                                seriesAverage.data[0].remove(true);
+                            };
+                            total = 0;
+
+                            for (var i = 0; i < sensor_data.length; i++) {
+                                var split1 = sensor_data[i].created_at.split('T');
+                                var split2 = split1[1].split('Z');
+                                var readingsTime = new Date((split1[0] + ' ' +split2[0]));
+                                
+                                if( readingsTime.getDate() == new Date().getDate()){
+                                    total += parseInt(sensor_data[i].value);
+                                    var x = readingsTime.getTime(),
+                                    y = parseInt(sensor_data[i].value);
+                                    series.addPoint([x,y], true, false);
+                                    seriesAverage.addPoint([x, total/(i+1)], true, false);
+                                }
+                            };
+                            
+                        });
+
+                        $("button#all").click(function(){
+
+                            var i = 0;
+                            while(series.data.length != 0){
+                                series.data[0].remove(true);
+                                seriesAverage.data[0].remove(true);
+                            };
+                            total = 0;
+
+                            for (var i = 0; i < sensor_data.length; i++) {
+                                var split1 = sensor_data[i].created_at.split('T');
+                                var split2 = split1[1].split('Z');
+                                var readingsTime = new Date((split1[0] + ' ' +split2[0]));
+                                total += parseInt(sensor_data[i].value);
+
+                                var x = new Date((split1[0] + ' ' +split2[0])).getTime(),
+                                y = parseInt(sensor_data[i].value);
+                                series.addPoint([x,y], true, false);
+                                seriesAverage.addPoint([x,total/(i+1)], true, false);
+                                
+                            };
+                            
+                        });
+
                         var faye = new Faye.Client('http://biifer.mine.nu:9292/faye');
                        // alert(sensor_data[0].sensor_id);
                         faye.subscribe("/sensor/" + sensor_id + "/new", function(object) {
@@ -62,33 +110,7 @@ $(function () {
                             series.addPoint([x, y], true, false);
                             seriesAverage.addPoint([x, totalValue/numberOfElements], true, false);
                         });
-/*
-                        setInterval(function() {
-                           $.ajax({url : '/sensors/' + sensor_id + '.json', type : 'GET'}).success(function(new_data) {
-                                //alert(data);
-                                if(length != new_data.length){
-                                    
-                                    for (var newSensorNumber = (new_data.length - length); newSensorNumber > 0 ; newSensorNumber--) {
-                                    nextElement = new_data.length - newSensorNumber;
-                                    totalValue += parseInt(new_data[nextElement].value);
-                                        
-                                    var split1 = new_data[nextElement].created_at.split('T');
-                                    var split2 = split1[1].split('Z');
-                                    
-                                    var x = new Date((split1[0] + ' ' +split2[0])).getTime(), // current time
-                                    y = parseInt(new_data[nextElement].value);
-                                    alert("Interval: " + x);
-                                   series.addPoint([x, y], true, false);
-                                   seriesAverage.addPoint([x, totalValue/nextElement], true, false);
 
-                                   };
-
-                                    length = new_data.length;
-                                }
-                            })
-
-                        }, 10000);
-*/
                     }
 
                 }
@@ -97,7 +119,7 @@ $(function () {
 
             title: {
 
-                text: 'Temperature'
+                text: sensor_type
 
             },
 
@@ -119,15 +141,16 @@ $(function () {
 
                 title: {
 
-                    text: 'Temperature'
+                    text: sensor_type
 
                 },
 
                 labels: {
 
                     formatter: function() {
-
-                        return this.value +'°'
+ 
+                        return this.value + sensor_unit
+     
 
                     }
 
@@ -165,7 +188,7 @@ $(function () {
 
             series: [{
 
-                name: 'Temperature',
+                name: sensor_type,
 
                     data: (function() {
 

@@ -14,17 +14,17 @@ $(function () {
     $.get("/sensors/"+ sensor_url_id +".json").success(function(sensor_data) {
       var length = sensor_data.length;
       var minGaugeData = new google.visualization.DataTable();
-      minGaugeData.addColumn('number', 'Min °C');
+      minGaugeData.addColumn('number', 'Min ' + sensor_unit);
       minGaugeData.addRows(1);
       minGaugeData.setCell(0, 0, parseInt(min_value));
 
       var maxGaugeData = new google.visualization.DataTable();
-      maxGaugeData.addColumn('number', 'Max °C');
+      maxGaugeData.addColumn('number', 'Max ' + sensor_unit);
       maxGaugeData.addRows(1);
       maxGaugeData.setCell(0, 0, parseInt(max_value));
 
       var currentGaugeData = new google.visualization.DataTable();
-      currentGaugeData.addColumn('number', 'Current °C');
+      currentGaugeData.addColumn('number', 'Current ' + sensor_unit);
       currentGaugeData.addRows(1);
       currentGaugeData.setCell(0, 0, parseInt(sensor_data[ length - 1 ].value));
     
@@ -35,6 +35,35 @@ $(function () {
         max_gauge_chart.draw(maxGaugeData, options);
         min_gauge_chart.draw(minGaugeData, options);
         current_gauge_chart.draw(currentGaugeData, options);
+
+      $("button#today").click(function(){
+        max = parseInt(sensor_data[sensor_data.length-1].value);
+        min = parseInt(sensor_data[sensor_data.length-1].value);
+
+        for (var i = 0; i < sensor_data.length-1; i++) {
+
+          var split1 = sensor_data[i].created_at.split('T');
+          var split2 = split1[1].split('Z');
+          var readingsTime = new Date((split1[0] + ' ' +split2[0])).getDate();
+                                
+          if( readingsTime == new Date().getDate() && parseInt(sensor_data[i].value) > max){
+            max = parseInt(sensor_data[i].value);
+          }
+          else if( readingsTime == new Date().getDate() && parseInt(sensor_data[i].value) < min)
+            min = parseInt(sensor_data[i].value);
+        };
+         minGaugeData.setValue(0, 0, min);
+         min_gauge_chart.draw(minGaugeData, options);
+         maxGaugeData.setValue(0, 0, max);
+         max_gauge_chart.draw(maxGaugeData, options);
+      });
+
+        $("button#all").click(function(){
+          minGaugeData.setValue(0, 0, min_value);
+          min_gauge_chart.draw(minGaugeData, options);
+          maxGaugeData.setValue(0, 0, parseInt(max_value));
+          max_gauge_chart.draw(maxGaugeData, options);
+        });
 
       var faye = new Faye.Client('http://biifer.mine.nu:9292/faye');
       faye.subscribe("/sensor/" + sensor_id + "/new", function(object) {
