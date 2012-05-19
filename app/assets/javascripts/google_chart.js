@@ -37,26 +37,29 @@ $(function () {
         current_gauge_chart.draw(currentGaugeData, options);
 
       $("button#today").click(function(){
-        max = parseInt(sensor_data[sensor_data.length-1].value);
-        min = parseInt(sensor_data[sensor_data.length-1].value);
+        $.get("/sensors/today/"+ sensor_url_id +".json").success(function(sensor_data_today) {
+          if(sensor_data_today.length == 0){
+            alert("No values from today!");
+          }else{
+          max = parseInt(sensor_data_today[0].value);
+          min = parseInt(sensor_data_today[0].value);
 
-        for (var i = 0; i < sensor_data.length-1; i++) {
-
-          var split1 = sensor_data[i].created_at.split('T');
-          var split2 = split1[1].split('Z');
-          var readingsTime = new Date((split1[0] + ' ' +split2[0])).getDate();
-                                
-          if( readingsTime == new Date().getDate() && parseInt(sensor_data[i].value) > max){
-            max = parseInt(sensor_data[i].value);
-          }
-          else if( readingsTime == new Date().getDate() && parseInt(sensor_data[i].value) < min)
-            min = parseInt(sensor_data[i].value);
+          for (var i = 1; i < sensor_data_today.length; i++) {
+            if(parseInt(sensor_data_today[i].value) > max){
+              max = parseInt(sensor_data_today[i].value);
+            }
+            else if(parseInt(sensor_data_today[i].value) < min){
+              min = parseInt(sensor_data_today[i].value);
+            };
+          minGaugeData.setValue(0, 0, min);
+          min_gauge_chart.draw(minGaugeData, options);
+          maxGaugeData.setValue(0, 0, max);
+          max_gauge_chart.draw(maxGaugeData, options);
+          };
         };
-         minGaugeData.setValue(0, 0, min);
-         min_gauge_chart.draw(minGaugeData, options);
-         maxGaugeData.setValue(0, 0, max);
-         max_gauge_chart.draw(maxGaugeData, options);
+        });
       });
+        
 
         $("button#all").click(function(){
           minGaugeData.setValue(0, 0, min_value);

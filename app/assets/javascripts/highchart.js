@@ -51,32 +51,34 @@ $(function () {
                         };
 
                         $("button#today").click(function(){
+                            $.get("/sensors/today/"+ sensor_url_id +".json").success(function(sensor_data_today) {
+                                if(sensor_data_today.length == 0){
+                                    
+                                }else{
+                                    while(series.data.length != 0){
+                                        series.data[0].remove(true);
+                                        seriesAverage.data[0].remove(true);
+                                    };
+                                    total = 0;
 
                             
-                            while(series.data.length != 0){
-                                series.data[0].remove(true);
-                                seriesAverage.data[0].remove(true);
-                            };
-                            total = 0;
-
-                            for (var i = 0; i < sensor_data.length; i++) {
-                                var split1 = sensor_data[i].created_at.split('T');
-                                var split2 = split1[1].split('Z');
-                                var readingsTime = new Date((split1[0] + ' ' +split2[0]));
+                               
+                                    for (var i = 0; i < sensor_data_today.length; i++) {
                                 
-                                if( readingsTime.getDate() == new Date().getDate()){
-                                    total += parseInt(sensor_data[i].value);
-                                    var x = readingsTime.getTime(),
-                                    y = parseInt(sensor_data[i].value);
-                                    series.addPoint([x,y], true, false);
-                                    seriesAverage.addPoint([x, total/(i+1)], true, false);
-                                }
-                            };
-                            
+                                        var split1 = sensor_data_today[i].created_at.split('T');
+                                        var split2 = split1[1].split('Z');
+                                        total += parseInt(sensor_data_today[i].value);
+                                        var x = new Date((split1[0] + ' ' +split2[0])).getTime(),
+                                        y = parseInt(sensor_data_today[i].value);
+                                        series.addPoint([x,y], true, false);
+                                        seriesAverage.addPoint([x, total/(i+1)], true, false);
+                                    };
+                                };
+                            });                      
                         });
 
                         $("button#all").click(function(){
-
+                            $.get("/sensors/"+ sensor_url_id +".json").success(function(sensor_data) {
                             var i = 0;
                             while(series.data.length != 0){
                                 series.data[0].remove(true);
@@ -96,7 +98,7 @@ $(function () {
                                 seriesAverage.addPoint([x,total/(i+1)], true, false);
                                 
                             };
-                            
+                            });
                         });
 
                         var faye = new Faye.Client('http://biifer.mine.nu:9292/faye');
