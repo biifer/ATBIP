@@ -6,7 +6,6 @@ $(function () {
     var average_table = [];
     var average = 0;
     var temp = 0;
-
     $(document).ready(function() {
 
                 Highcharts.setOptions({
@@ -32,7 +31,7 @@ $(function () {
 
                 renderTo: 'highchart',
                 zoomType: 'x',
-                type: 'spline',
+                type: 'line',
                 backgroundColor: 'transparent',
 
                                 events: {
@@ -47,11 +46,69 @@ $(function () {
                         var length = sensor_data.length;
                         var totalValue = 0;
                         var numberOfElements = sensor_data.length;
+                        var readingRange = null;
                         for (var i = 0; i < sensor_data.length; i++) {
                             totalValue += parseInt(sensor_data[i].value);
                         };
 
-                        var faye = new Faye.Client('http://localhost:9292/faye');
+                        $("button#today").click(function(){
+                            if(readingRange != 'today'){
+                                readingRange = 'today';
+                            $.get("/sensors/today/"+ sensor_url_id +".json").success(function(sensor_data_today) {
+                                if(sensor_data_today.length == 0){
+                                    
+                                }else{
+                                    while(series.data.length != 0){
+                                        series.data[0].remove(true);
+                                        seriesAverage.data[0].remove(true);
+                                    };
+                                    total = 0;
+
+                            
+                               
+                                    for (var i = 0; i < sensor_data_today.length; i++) {
+                                
+                                        var split1 = sensor_data_today[i].created_at.split('T');
+                                        var split2 = split1[1].split('Z');
+                                        total += parseInt(sensor_data_today[i].value);
+                                        var x = new Date((split1[0] + ' ' +split2[0])).getTime(),
+                                        y = parseInt(sensor_data_today[i].value);
+                                        series.addPoint([x,y], true, false);
+                                        seriesAverage.addPoint([x, total/(i+1)], true, false);
+                                    };
+                                };
+                            });
+                            };                      
+                        });
+
+                        $("button#all").click(function(){
+                            if(readingRange != 'all'){
+                                readingRange = 'all';
+                            $.get("/sensors/"+ sensor_url_id +".json").success(function(sensor_data) {
+                            var i = 0;
+                            while(series.data.length != 0){
+                                series.data[0].remove(true);
+                                seriesAverage.data[0].remove(true);
+                            };
+                            total = 0;
+
+                            for (var i = 0; i < sensor_data.length; i++) {
+                                var split1 = sensor_data[i].created_at.split('T');
+                                var split2 = split1[1].split('Z');
+                                var readingsTime = new Date((split1[0] + ' ' +split2[0]));
+                                total += parseInt(sensor_data[i].value);
+
+                                var x = new Date((split1[0] + ' ' +split2[0])).getTime(),
+                                y = parseInt(sensor_data[i].value);
+                                series.addPoint([x,y], true, false);
+                                seriesAverage.addPoint([x,total/(i+1)], true, false);
+                                
+                            };
+                            });
+                        };
+                        });
+
+                        var faye = new Faye.Client('http://biifer.mine.nu:9292/faye');
                        // alert(sensor_data[0].sensor_id);
                         faye.subscribe("/sensor/" + sensor_id + "/new", function(object) {
                         
@@ -62,33 +119,7 @@ $(function () {
                             series.addPoint([x, y], true, false);
                             seriesAverage.addPoint([x, totalValue/numberOfElements], true, false);
                         });
-/*
-                        setInterval(function() {
-                           $.ajax({url : '/sensors/' + sensor_id + '.json', type : 'GET'}).success(function(new_data) {
-                                //alert(data);
-                                if(length != new_data.length){
-                                    
-                                    for (var newSensorNumber = (new_data.length - length); newSensorNumber > 0 ; newSensorNumber--) {
-                                    nextElement = new_data.length - newSensorNumber;
-                                    totalValue += parseInt(new_data[nextElement].value);
-                                        
-                                    var split1 = new_data[nextElement].created_at.split('T');
-                                    var split2 = split1[1].split('Z');
-                                    
-                                    var x = new Date((split1[0] + ' ' +split2[0])).getTime(), // current time
-                                    y = parseInt(new_data[nextElement].value);
-                                    alert("Interval: " + x);
-                                   series.addPoint([x, y], true, false);
-                                   seriesAverage.addPoint([x, totalValue/nextElement], true, false);
 
-                                   };
-
-                                    length = new_data.length;
-                                }
-                            })
-
-                        }, 10000);
-*/
                     }
 
                 }
@@ -97,7 +128,7 @@ $(function () {
 
             title: {
 
-                text: 'Temperature'
+                text: sensor_type
 
             },
 
@@ -119,15 +150,16 @@ $(function () {
 
                 title: {
 
-                    text: 'Temperature'
+                    text: sensor_type
 
                 },
 
                 labels: {
 
                     formatter: function() {
-
-                        return this.value +'°'
+ 
+                        return this.value + sensor_unit
+     
 
                     }
 
@@ -165,7 +197,7 @@ $(function () {
 
             series: [{
 
-                name: 'Temperature',
+                name: sensor_type,
 
                     data: (function() {
 

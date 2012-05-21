@@ -11,13 +11,17 @@ import java.sql.SQLException;
 public class ServerUDP {
 	public static void main(String[] args) throws IOException, SQLException {
 		
-		int numberOfThreads = Integer.parseInt(args[0]);
+		int numberOfThreads = 4;
+		if(args.length > 0){
+			numberOfThreads = Integer.parseInt(args[0]);
+		}
+		System.out.println("Server started with: " +  numberOfThreads + " worker threads.");
 		PoolOfTasks poolOfTasks = new PoolOfTasks();
 		
 		/*
 		 * Creates a new socket that will receive the UDP messages.
-		 */
-		DatagramSocket serverSocket = new DatagramSocket(9876);
+		 */ 
+		DatagramSocket serverSocket = new DatagramSocket(50000);
 		/*
 		 * Entering the loop that will run for ever.
 		 */

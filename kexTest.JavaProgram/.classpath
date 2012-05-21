@@ -2,12 +2,12 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/mysql-connector-java-5.1.16-bin.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-beanutils-1.7.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-collections.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-lang.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/ezmorph.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/json-lib-2.2.2-jdk15.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Alfred/Desktop/Skola/kexjobb/ATBIP/kexTest.JavaProgram/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="commons-beanutils-1.7.jar"/>
+	<classpathentry kind="lib" path="commons-collections.jar"/>
+	<classpathentry kind="lib" path="commons-lang.jar"/>
+	<classpathentry kind="lib" path="commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="ezmorph.jar"/>
+	<classpathentry kind="lib" path="json-lib-2.2.2-jdk15.jar"/>
+	<classpathentry kind="lib" path="mysql-connector-java-5.1.16-bin.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

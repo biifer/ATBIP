@@ -1,19 +1,11 @@
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
+import java.net.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.text.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
-import javax.print.attribute.standard.OrientationRequested;
 
 import net.sf.json.JSONObject;
 
@@ -156,7 +148,7 @@ public class DatabaseController implements Runnable {
 	}
 
 	private String decryptAES(byte[] message){
-		SecretKeySpec skeySpec = new SecretKeySpec("PK80Â‰®q''eto0z<".getBytes(), "AES");
+		SecretKeySpec skeySpec = new SecretKeySpec("PK80111q''eto0z<".getBytes(), "AES");
 		Cipher cipher;
 		byte[] original = null;
 
@@ -213,7 +205,7 @@ public class DatabaseController implements Runnable {
 	}
 
 	public void pushToFaye() throws IOException{
-		URL url = new URL("http://localhost:9292/faye");
+		URL url = new URL("http://biifer.mine.nu:9292/faye");
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setDoOutput(true);
 		conn.setRequestProperty("Content-Type", "application/json");
@@ -226,7 +218,6 @@ public class DatabaseController implements Runnable {
 		arrayMessageJSON.put("channel", "/sensor/" + sensor_id + "/new");
 		arrayMessageJSON.put("data", elementJSON.toString());
 		conn.getOutputStream().write(arrayMessageJSON.toString().getBytes("UTF-8"));
-		conn.getInputStream();
 		conn.disconnect();
 	}
 

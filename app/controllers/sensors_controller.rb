@@ -101,4 +101,12 @@ class SensorsController < ApplicationController
       format.json { head :no_content }
     end
   end
+  def today
+    @sensor = Sensor.find(params[:id])
+    @sensor_data = SensorReading.where("sensor_id = ? AND gateway_id = ? AND created_at >= ?", @sensor.sensor_id, @sensor.gateway_id, Time.now.beginning_of_day)
+
+    respond_to do |format|  
+      format.json { render json: @sensor_data }
+    end
+  end
 end

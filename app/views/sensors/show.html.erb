@@ -1,12 +1,23 @@
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
 <script type='text/javascript'>
       google.load('visualization', '1', {packages:['gauge']});
-
       // params that will be used in the external .js scripts!
+
       var sensor_url_id = <%= @sensor.id %>;
+      var sensor_type = '<%= @sensor.sensor_type %>';
       var sensor_id = '<%= @sensor.sensor_id %>'
       var min_value = <%= getMin(@sensor_data) %>;
       var max_value = <%= getMax(@sensor_data) %>;
+      var sensor_unit;
+
+      if (sensor_type == 'Temperature') {
+        sensor_unit = '°C';
+      }
+      else if(sensor_type == 'Weight'){
+        sensor_unit = 'kg';
+      };
+
 </script>
 <script src="http://code.highcharts.com/highcharts.js"></script>
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
@@ -27,6 +38,8 @@
 <% end %>
 
 <div id="highchart" style="min-width: 400px; height: 400px; margin: 0 auto; clear:left;"></div>
+<button id='today' type="button">Readings from today</button>
+<button id='all' type="button">All readings</button>
 
 <%#<p id="line_chart_div" style="width: 450px; height: 250px; "></p> %>
 <p>

@@ -9,6 +9,7 @@ Test2::Application.routes.draw do
 
   root :to => "gateways#index"
   match "/users/sign_out", to: "devise/sessions#destroy", :as => "logout"
+  match '/sensors/today/:id' => 'sensors#today'
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
