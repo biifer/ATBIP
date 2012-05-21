@@ -1,25 +1,18 @@
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Random;
-
+import java.util.*;
 import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.*;
 
 
 public class SendUDP {
 
 	/**
-	 * @param args
+	 * @param args IP address
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) {
@@ -32,11 +25,14 @@ public class SendUDP {
 			int randomValue = (rnd.nextInt(10000) % 50) -20;
 			
 			InetAddress IPAddress = InetAddress.getByName("localhost");
+			if (args.length == 1) {
+				IPAddress = InetAddress.getByName(args[0]);
+			}
 			byte[] cryptoData = new byte[1024];
 			String sentence = "27,3," + randomValue + ",Temperature," + getTime() + ",";
 			cryptoData = encryptAES(sentence);
-			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 9876);
-			System.out.println("Sending encrypted message: " + cryptoData.toString());
+			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 50000);
+			System.out.println("Sending encrypted message: " + cryptoData.toString() + "\nto: " + args[0]);
 			clientSocket.send(sendPacket);
 			clientSocket.close();
 
@@ -59,7 +55,7 @@ public class SendUDP {
 		final byte[] encryptedMessageToReturn = new byte[1024];
 		
 		try {
-			SecretKeySpec skeySpec = new SecretKeySpec("PK80Â‰®q''eto0z<".getBytes(), "AES");
+			SecretKeySpec skeySpec = new SecretKeySpec("PK80111q''eto0z<".getBytes(), "AES");
 			Cipher cipher = Cipher.getInstance("AES/CBC/Nopadding");
 			
 			AlgorithmParameterSpec paramSpec = new IvParameterSpec("IvAnQQ-piece*pie".getBytes());
