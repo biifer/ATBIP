@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
@@ -6,12 +7,22 @@ import java.sql.*;
 import java.text.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 import net.sf.json.JSONObject;
 
 public class DatabaseController implements Runnable {
 
-	String gateway_id, sensor_id, value, type, time, url;
+	String gateway_id, sensor_id, type, time, url;
+	float value;
 	Connection connection;
 	ResultSet resultSet;
 	Statement statement;
@@ -19,14 +30,13 @@ public class DatabaseController implements Runnable {
 	PreparedStatement preparedStatement;
 	Exception badGateway = new Exception("Not a valid gateway!");
 	Exception badMessageDigestException = new Exception("Bad MessageDigest!");
+	Exception wrongNumberOfAttributesException = new Exception("Wrong number of attributes in message!");
 	PoolOfTasks poolOfTasks;
 	String decryptedMessage = null;
 
 	public DatabaseController(PoolOfTasks poolOfTasks) throws SQLException {
 		this.poolOfTasks = poolOfTasks;
 		this.url = "jdbc:mysql://biifer.mine.nu:3306/development3";
-		this.connection = DriverManager.getConnection(url, "ivan",
-				"eKufsfrQMNrSyB4K");
 		this.resultSet = null;
 		this.statement = null;
 		this.preparedStatement = null;
@@ -38,63 +48,81 @@ public class DatabaseController implements Runnable {
 		while(true){
 			try {
 				encryptedMessage = poolOfTasks.getTask();
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
-			System.out.println("Received encoded message: " + encryptedMessage);
-			try {
+
+				System.out.println("Received encoded message: " + encryptedMessage);
+
 				decryptedMessage = decryptAES(encryptedMessage);
 
 				System.out.println("Decrypted message: " + decryptedMessage.trim() );
-				String[] splitSentence = decryptedMessage.split(",");
-				gateway_id = splitSentence[0];
-				sensor_id = splitSentence[1];
-				value = splitSentence[2];
-				type = splitSentence[3];
-				time = splitSentence[4];
-	
-				Class.forName("com.mysql.jdbc.Driver");
 
-				statement = connection.createStatement();
-				resultSet = statement.executeQuery(				"SELECT id AS gateway_id, " +
-						"(SELECT sensor_id FROM sensors WHERE sensor_id = '" + sensor_id + "' AND gateway_id = " + gateway_id + ") AS valid, " +
-						"(SELECT created_at FROM " +
-						"(SELECT id, created_at FROM sensor_readings WHERE sensor_id = '"+ sensor_id +"' AND gateway_id =" + gateway_id + " ORDER BY id DESC LIMIT 1) AS timetable)" +
-						" AS timestamp FROM gateways WHERE id = "+ gateway_id);
+				//Creates a DOM-object from the message received and extracts sensor_reading elements
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				Document document = builder.parse(new InputSource(new StringReader(decryptedMessage.trim())));
+				NodeList sensor_readings = document.getElementsByTagName("sensor_reading");
 
-				// Checks if the gateway exists. If NOT throw badGateway exception
-				if (!resultSet.next()) {
-					throw badGateway;
-				} else {
-					// If the sensor already exists, add sensor data to the existing
-					// sensor
-					if (resultSet.getString(2) != null) {
+				//For each sensor_reading element in the DOM-object do the necessary operations
+				for(int i = 0; i < sensor_readings.getLength(); i++){
+					try{
+						//Extracts attributes from the element
+						Element node = (Element) sensor_readings.item(i);
+						NamedNodeMap attr = node.getAttributes();
+						if(attr.getLength() < 5){
+							throw wrongNumberOfAttributesException;
+						}
+						gateway_id = node.getAttribute("gateway_id");
+						sensor_id = node.getAttribute("sensor_id");
+						value = Float.valueOf(node.getAttribute("value").trim()).floatValue();
+						type = node.getAttribute("type");
+						time = node.getAttribute("time");
 
-						System.out.println("Adding data to sensor with id: "
-								+ sensor_id + "\n");
+						Class.forName("com.mysql.jdbc.Driver");
+						connection = DriverManager.getConnection(url, "ivan",
+								"eKufsfrQMNrSyB4K");
 
-						addSensorReadings(resultSet.getString(3));
+						statement = connection.createStatement();
+						resultSet = statement.executeQuery(				"SELECT id AS gateway_id, " +
+								"(SELECT sensor_id FROM sensors WHERE sensor_id = '" + sensor_id + "' AND gateway_id = " + gateway_id + ") AS valid, " +
+								"(SELECT created_at FROM " +
+								"(SELECT id, created_at FROM sensor_readings WHERE sensor_id = '"+ sensor_id +"' AND gateway_id =" + gateway_id + " ORDER BY id DESC LIMIT 1) AS timetable)" +
+								" AS timestamp FROM gateways WHERE id = "+ gateway_id);
 
-					}
-					// If the sensor does NOT exist, create a new sensor first and
-					// then add the sensor readings
-					else {
+						// Checks if the gateway exists. If NOT throw badGateway exception
+						if (!resultSet.next()) {
+							throw badGateway;
+						} else {
+							// If the sensor already exists, add sensor data to the existing
+							// sensor
+							if (resultSet.getString(2) != null) {
 
-						System.out.println("Adding new sensor to gateway: "
-								+ gateway_id + " and data to sensor with id: "
-								+ sensor_id + "\n");
+								System.out.println("Adding data to sensor with id: "
+										+ sensor_id + "\n");
 
-						addSensor();
-						addSensorReadings(resultSet.getString(3));
+								addSensorReadings(resultSet.getString(3));
 
+							}
+							// If the sensor does NOT exist, create a new sensor first and
+							// then add the sensor readings
+							else {
+
+								System.out.println("Adding new sensor to gateway: "
+										+ gateway_id + " and data to sensor with id: "
+										+ sensor_id + "\n");
+
+								addSensor();
+								addSensorReadings(resultSet.getString(3));
+
+							}
+						}
+
+					}catch (Exception e){
+						e.printStackTrace();
 					}
 				}
-
 			}
-
-			catch (SQLException e) {
-				e.printStackTrace();
-			} catch (Exception e) {
+			catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -105,12 +133,13 @@ public class DatabaseController implements Runnable {
 			DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			long timestampLong = sdf.parse(timestamp).getTime();
 			long timeLong = sdf.parse(time).getTime();
-			if(timeLong > (timestampLong + 2000)){
+			//			if(timeLong > (timestampLong + 2000)){
+			if(true){
 				String gateway = "INSERT INTO sensor_readings (sensor_id, gateway_id, value, created_at, updated_at) VALUES( ?, ?, ?, ?, ?)";
 				preparedStatement = connection.prepareStatement(gateway);
 				preparedStatement.setString(1, sensor_id);
 				preparedStatement.setString(2, gateway_id);
-				preparedStatement.setString(3, value);
+				preparedStatement.setString(3, "" + value);
 				preparedStatement.setString(4, time);
 				preparedStatement.setString(5, time);
 				preparedStatement.executeUpdate();
@@ -123,7 +152,7 @@ public class DatabaseController implements Runnable {
 			preparedStatement = connection.prepareStatement(gateway);
 			preparedStatement.setString(1, sensor_id);
 			preparedStatement.setString(2, gateway_id);
-			preparedStatement.setString(3, value);
+			preparedStatement.setString(3, "" + value);
 			preparedStatement.setString(4, time);
 			preparedStatement.setString(5, time);
 			preparedStatement.executeUpdate();
@@ -147,60 +176,51 @@ public class DatabaseController implements Runnable {
 		preparedStatement.close();
 	}
 
-	private String decryptAES(byte[] message){
+	private String decryptAES(byte[] message) throws Exception{
 		SecretKeySpec skeySpec = new SecretKeySpec("PK80111q''eto0z<".getBytes(), "AES");
 		Cipher cipher;
-		byte[] original = null;
 
 		/**
 		 * Extracts the encrypted message and the message digest from the message received.
 		 */
+		byte[] original = null;
 		byte[] digest = new byte[16];
-		byte[] encryptedMessage = new byte[1008];
+		byte[] digestedMessage = new byte[1008];
+		byte[] iv = new byte[16];
+		byte[] encryptedMessage = new byte[992];
+		
+		//Extracts the message that the digest was calculated from
 		for(int i = 0; i < 1008; i++){
-			encryptedMessage[i] = message[i];
+			digestedMessage[i] = message[i];
 		}
+		//Extracts the digest
 		for(int i = 0; i < 16; i++){
 			digest[i] = message[1008+i];
 		}
-
-		try {
-
-			Mac md = Mac.getInstance("HmacMD5");
-			md.init(skeySpec);
-			md.update(encryptedMessage);		
-			if(!MessageDigest.isEqual(digest, md.doFinal())){
-				throw badMessageDigestException;
-			}
-			AlgorithmParameterSpec paramSpec = new IvParameterSpec("IvAnQQ-piece*pie".getBytes());
-			cipher = Cipher.getInstance("AES/CBC/Nopadding");
-
-			cipher.init(Cipher.DECRYPT_MODE, skeySpec, paramSpec);
-			original = cipher.doFinal(encryptedMessage);
-
-
-			return new String(original);
-
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			return null;
-		} catch (NoSuchPaddingException e) {
-			e.printStackTrace();
-			return null;
-		} catch (InvalidKeyException e) {
-			e.printStackTrace();
-			return null;
-		} catch (IllegalBlockSizeException e) {
-			e.printStackTrace();
-			return null;
-		} catch (BadPaddingException e) {
-			e.printStackTrace();
-			return null;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+		
+		//Calculates the digest from the message
+		Mac md = Mac.getInstance("HmacMD5");
+		md.init(skeySpec);
+		md.update(digestedMessage);		
+		if(!MessageDigest.isEqual(digest, md.doFinal())){
+			throw badMessageDigestException;
 		}
+		//Extracts the encrypted messsage
+		for(int i = 0; i < 992; i++){
+			encryptedMessage[i] = digestedMessage[i];
+		}
+		//Extracts the initialization vector
+		for(int i = 0; i < 16; i++){
+			iv[i] = digestedMessage[i+992];
+		}
+		//Decrypts the message using the extracted IV
+		AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
+		cipher = Cipher.getInstance("AES/CBC/Nopadding");
+		cipher.init(Cipher.DECRYPT_MODE, skeySpec, paramSpec);
+		original = cipher.doFinal(encryptedMessage);
 
+
+		return new String(original);
 
 	}
 
@@ -218,6 +238,7 @@ public class DatabaseController implements Runnable {
 		arrayMessageJSON.put("channel", "/sensor/" + sensor_id + "/new");
 		arrayMessageJSON.put("data", elementJSON.toString());
 		conn.getOutputStream().write(arrayMessageJSON.toString().getBytes("UTF-8"));
+		conn.getInputStream();
 		conn.disconnect();
 	}
 

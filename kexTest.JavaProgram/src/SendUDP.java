@@ -1,12 +1,28 @@
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidParameterSpecException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.*;
 
 
 public class SendUDP {
@@ -19,22 +35,27 @@ public class SendUDP {
 
 		DatagramSocket clientSocket;
 		try {
+
 			clientSocket = new DatagramSocket();
-			
-			Random rnd = new Random();
-			int randomValue = (rnd.nextInt(10000) % 50) -20;
-			
+
+
+
+
 			InetAddress IPAddress = InetAddress.getByName("localhost");
 			if (args.length == 1) {
 				IPAddress = InetAddress.getByName(args[0]);
 			}
+			//			for(int i = 0; i < 10; i++){	
+
 			byte[] cryptoData = new byte[1024];
-			String sentence = "27,3," + randomValue + ",Temperature," + getTime() + ",";
-			cryptoData = encryptAES(sentence);
+			//			String sentence = "27,2," + randomValue + ",Temperature," + getTime() + ",";
+			cryptoData = encryptAES(composeXMLFile());
 			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 50000);
 			System.out.println("Sending encrypted message: " + cryptoData.toString() + "\nto: " + args[0]);
 			clientSocket.send(sendPacket);
+			//			}
 			clientSocket.close();
+
 
 		}			 
 		catch (SocketException e) {
@@ -49,17 +70,20 @@ public class SendUDP {
 		}
 
 	}
-	private static byte[] encryptAES(String message)  {
-		byte[] encryptedMessage = new byte[1024];
-		final byte[] temp = new byte[1008];
+	private static byte[] encryptAES(String message) throws InvalidParameterSpecException  {
+		byte[] encryptedMessage;
+		final byte[] temp = new byte[992];
 		final byte[] encryptedMessageToReturn = new byte[1024];
-		
+		final byte[] messageToBeDigested = new byte[1008];
+
 		try {
 			SecretKeySpec skeySpec = new SecretKeySpec("PK80111q''eto0z<".getBytes(), "AES");
 			Cipher cipher = Cipher.getInstance("AES/CBC/Nopadding");
-			
-			AlgorithmParameterSpec paramSpec = new IvParameterSpec("IvAnQQ-piece*pie".getBytes());
-			
+			SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+			byte[] iv = new byte[16];
+			random.nextBytes(iv);
+			AlgorithmParameterSpec paramSpec = new IvParameterSpec(iv);
+
 			cipher.init(Cipher.ENCRYPT_MODE, skeySpec, paramSpec);
 
 			final byte[] plainTextBytes = message.getBytes("UTF-8");
@@ -68,16 +92,26 @@ public class SendUDP {
 				temp[i] = plainTextBytes[i];
 			}
 			encryptedMessage = cipher.doFinal(temp);
-			
 			// Creates a message digest for the encrypted message.
 			Mac md = Mac.getInstance("HmacMD5");
 			md.init(skeySpec);
-			md.update(encryptedMessage);
-			byte[] digest = md.doFinal();
-			
-			// Adds the encrypted message and the digest to the byte string to be sent.
+
 			for(int i = 0; i < 1008; i++){
+				if(i < 992){
+					messageToBeDigested[i] = encryptedMessage[i];
+				}else{
+					messageToBeDigested[i] = iv[i - 992];
+				}
+			}
+			md.update(messageToBeDigested);
+			byte[] digest = md.doFinal();
+
+			// Adds the encrypted message and the digest to the byte string to be sent.
+			for(int i = 0; i < 992; i++){
 				encryptedMessageToReturn[i] = encryptedMessage[i];
+			}
+			for(int i = 0; i < 16; i++){
+				encryptedMessageToReturn[992+i] = iv[i];
 			}
 			for(int i = 0; i < 16; i++){
 				encryptedMessageToReturn[1008+i] = digest[i];
@@ -105,6 +139,49 @@ public class SendUDP {
 		String time = sdf.format(Calendar.getInstance().getTime());
 
 		return time;
+
+	}
+	public static String composeXMLFile(){
+		Random rnd = new Random();
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder docBuilder;
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			docBuilder = docFactory.newDocumentBuilder();
+
+
+			Document doc = docBuilder.newDocument();
+			Element rootElement = doc.createElement("data");
+			doc.appendChild(rootElement);
+			for(int i = 0; i < 2; i++){
+				float randomValue = ((rnd.nextInt(10000) % 50) -20) + rnd.nextFloat();
+				
+				Element sensor_reading = doc.createElementNS(null, "sensor_reading");
+				sensor_reading.setAttributeNS(null, "gateway_id", "27");
+				sensor_reading.setAttributeNS(null, "sensor_id", "2");
+				sensor_reading.setAttributeNS(null, "value", "" + randomValue);
+				sensor_reading.setAttributeNS(null, "type", "Temperature");
+				sensor_reading.setAttributeNS(null, "time", getTime());
+				rootElement.appendChild(sensor_reading);
+			}
+			Result result = new StreamResult(out);
+			TransformerFactory factory = TransformerFactory.newInstance();
+			Transformer transformer = factory.newTransformer();
+			transformer.transform(new DOMSource(doc), result);
+
+			System.out.println(out.toString());
+			return out.toString();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		} catch (TransformerConfigurationException e) {
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			e.printStackTrace();
+		}
+
+		return out.toString();
+
+
 
 	}
 
