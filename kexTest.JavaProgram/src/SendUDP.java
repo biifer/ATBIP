@@ -1,24 +1,13 @@
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.*;
 import java.security.*;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.InvalidParameterSpecException;
+import java.security.spec.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
@@ -51,7 +40,7 @@ public class SendUDP {
 			//			String sentence = "27,2," + randomValue + ",Temperature," + getTime() + ",";
 			cryptoData = encryptAES(composeXMLFile());
 			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 50000);
-			System.out.println("Sending encrypted message: " + cryptoData.toString() + "\nto: " + args[0]);
+			System.out.println("Sending encrypted message: " + cryptoData.toString() + "\nto: " + IPAddress);
 			clientSocket.send(sendPacket);
 			//			}
 			clientSocket.close();
