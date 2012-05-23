@@ -1,22 +1,15 @@
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
 import java.sql.*;
 import java.text.*;
 import javax.crypto.*;
+import java.util.Date;
 import javax.crypto.spec.*;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
 import org.xml.sax.InputSource;
-
 import net.sf.json.JSONObject;
 
 public class DatabaseController implements Runnable {
@@ -33,13 +26,25 @@ public class DatabaseController implements Runnable {
 	Exception wrongNumberOfAttributesException = new Exception("Wrong number of attributes in message!");
 	PoolOfTasks poolOfTasks;
 	String decryptedMessage = null;
+	URL fayeUrl = new URL("http://biifer.mine.nu:9292/faye");
+	HttpURLConnection conn;
 
-	public DatabaseController(PoolOfTasks poolOfTasks) throws SQLException {
+
+
+	public DatabaseController(PoolOfTasks poolOfTasks) throws SQLException, IOException {
 		this.poolOfTasks = poolOfTasks;
 		this.url = "jdbc:mysql://biifer.mine.nu:3306/development3";
 		this.resultSet = null;
 		this.statement = null;
 		this.preparedStatement = null;
+		connection = DriverManager.getConnection(url, "ivan",
+								"eKufsfrQMNrSyB4K");
+		this.conn = (HttpURLConnection) fayeUrl.openConnection();
+
+		this.conn.setDoOutput(true);
+		this.conn.setRequestProperty("Content-Type", "application/json");
+		this.conn.setRequestMethod("POST");
+		this.conn.connect();
 	}
 
 	@Override
@@ -48,12 +53,14 @@ public class DatabaseController implements Runnable {
 		while(true){
 			try {
 				encryptedMessage = poolOfTasks.getTask();
+				long tim = new Date().getTime();
+				System.out.println("Thread: " + Thread.currentThread().getId() + " received encoded message: " + encryptedMessage + "\nAt: " + tim);
 
-				System.out.println("Received encoded message: " + encryptedMessage);
 
 				decryptedMessage = decryptAES(encryptedMessage);
+				System.out.println("Decrypt done after: " + (new Date().getTime() - tim));
 
-				System.out.println("Decrypted message: " + decryptedMessage.trim() );
+				//System.out.println("Decrypted message: " + decryptedMessage.trim() );
 
 				//Creates a DOM-object from the message received and extracts sensor_reading elements
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -77,8 +84,13 @@ public class DatabaseController implements Runnable {
 						time = node.getAttribute("time");
 
 						Class.forName("com.mysql.jdbc.Driver");
+						System.out.println("Creating connection after: " + (new Date().getTime() - tim));
+						if(connection.isClosed()){
 						connection = DriverManager.getConnection(url, "ivan",
 								"eKufsfrQMNrSyB4K");
+							}
+								long time2 = new Date().getTime();
+								System.out.println("Connection done after: " + (time2 - tim) + "ms");
 
 						statement = connection.createStatement();
 						resultSet = statement.executeQuery(				"SELECT id AS gateway_id, " +
@@ -86,6 +98,7 @@ public class DatabaseController implements Runnable {
 								"(SELECT created_at FROM " +
 								"(SELECT id, created_at FROM sensor_readings WHERE sensor_id = '"+ sensor_id +"' AND gateway_id =" + gateway_id + " ORDER BY id DESC LIMIT 1) AS timetable)" +
 								" AS timestamp FROM gateways WHERE id = "+ gateway_id);
+						System.out.println("query done after: " + (new Date().getTime() - tim));
 
 						// Checks if the gateway exists. If NOT throw badGateway exception
 						if (!resultSet.next()) {
@@ -95,8 +108,8 @@ public class DatabaseController implements Runnable {
 							// sensor
 							if (resultSet.getString(2) != null) {
 
-								System.out.println("Adding data to sensor with id: "
-										+ sensor_id + "\n");
+							//	System.out.println("Adding data to sensor with id: "
+							//			+ sensor_id + "\n");
 
 								addSensorReadings(resultSet.getString(3));
 
@@ -119,6 +132,8 @@ public class DatabaseController implements Runnable {
 						e.printStackTrace();
 					}
 				}
+				//connection.close();
+				System.out.println("Done after: " + (new Date().getTime() - tim) + "ms");
 			}
 			catch (InterruptedException e1) {
 				e1.printStackTrace();
@@ -145,7 +160,7 @@ public class DatabaseController implements Runnable {
 				preparedStatement.executeUpdate();
 
 				preparedStatement.close();
-				pushToFaye();
+				//pushToFaye();
 			}
 		}else{
 			String gateway = "INSERT INTO sensor_readings (sensor_id, gateway_id, value, created_at, updated_at) VALUES( ?, ?, ?, ?, ?)";
@@ -158,7 +173,7 @@ public class DatabaseController implements Runnable {
 			preparedStatement.executeUpdate();
 
 			preparedStatement.close();
-			pushToFaye();
+			//pushToFaye();
 		}
 	}
 
@@ -188,7 +203,7 @@ public class DatabaseController implements Runnable {
 		byte[] digestedMessage = new byte[1008];
 		byte[] iv = new byte[16];
 		byte[] encryptedMessage = new byte[992];
-		
+
 		//Extracts the message that the digest was calculated from
 		for(int i = 0; i < 1008; i++){
 			digestedMessage[i] = message[i];
@@ -197,11 +212,11 @@ public class DatabaseController implements Runnable {
 		for(int i = 0; i < 16; i++){
 			digest[i] = message[1008+i];
 		}
-		
+
 		//Calculates the digest from the message
 		Mac md = Mac.getInstance("HmacMD5");
 		md.init(skeySpec);
-		md.update(digestedMessage);		
+		md.update(digestedMessage);
 		if(!MessageDigest.isEqual(digest, md.doFinal())){
 			throw badMessageDigestException;
 		}
@@ -225,12 +240,6 @@ public class DatabaseController implements Runnable {
 	}
 
 	public void pushToFaye() throws IOException{
-		URL url = new URL("http://biifer.mine.nu:9292/faye");
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		conn.setDoOutput(true);
-		conn.setRequestProperty("Content-Type", "application/json");
-		conn.setRequestMethod("POST");
-		conn.connect();
 		JSONObject arrayMessageJSON = new JSONObject();
 		JSONObject elementJSON = new JSONObject();
 		elementJSON.put("value", value);
@@ -239,7 +248,7 @@ public class DatabaseController implements Runnable {
 		arrayMessageJSON.put("data", elementJSON.toString());
 		conn.getOutputStream().write(arrayMessageJSON.toString().getBytes("UTF-8"));
 		conn.getInputStream();
-		conn.disconnect();
+		//conn.disconnect();
 	}
 
 }
