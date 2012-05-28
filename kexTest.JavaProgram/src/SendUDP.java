@@ -34,7 +34,7 @@ public class SendUDP {
 			if (args.length == 1) {
 				IPAddress = InetAddress.getByName(args[0]);
 			}
-			//			for(int i = 0; i < 10; i++){	
+			for(int i = 0; i < Integer.parseInt(args[1]); i++){	
 
 			byte[] cryptoData = new byte[1024];
 			//			String sentence = "27,2," + randomValue + ",Temperature," + getTime() + ",";
@@ -42,7 +42,7 @@ public class SendUDP {
 			DatagramPacket sendPacket = new DatagramPacket(cryptoData, cryptoData.length, IPAddress, 50000);
 			System.out.println("Sending encrypted message: " + cryptoData.toString() + "\nto: " + IPAddress);
 			clientSocket.send(sendPacket);
-			//			}
+						}
 			clientSocket.close();
 
 
@@ -142,7 +142,7 @@ public class SendUDP {
 			Document doc = docBuilder.newDocument();
 			Element rootElement = doc.createElement("data");
 			doc.appendChild(rootElement);
-			for(int i = 0; i < 2; i++){
+			for(int i = 0; i < 1; i++){
 				float randomValue = ((rnd.nextInt(10000) % 50) -20) + rnd.nextFloat();
 				
 				Element sensor_reading = doc.createElementNS(null, "sensor_reading");
