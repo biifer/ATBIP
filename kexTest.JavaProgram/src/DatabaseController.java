@@ -14,8 +14,9 @@ import net.sf.json.JSONObject;
 
 public class DatabaseController implements Runnable {
 
-	String gateway_id, sensor_id, type, time, url;
+	String gateway_id, sensor_id, type, time, url = "jdbc:mysql://biifer.mine.nu:3306/development3";
 	float value;
+	long t;
 	Connection connection;
 	ResultSet resultSet;
 	Statement statement;
@@ -28,24 +29,26 @@ public class DatabaseController implements Runnable {
 	PoolOfTasks poolOfTasks;
 	String decryptedMessage = null;
 	URL fayeUrl = new URL("http://biifer.mine.nu:9292/faye");
-	HttpURLConnection conn;
+	HttpURLConnection fayeConnection;
 	OutputStreamWriter outputWriter;
 
-	public DatabaseController(PoolOfTasks poolOfTasks) throws SQLException,
-			IOException {
+	public DatabaseController(PoolOfTasks poolOfTasks) throws SQLException, IOException{
 		this.poolOfTasks = poolOfTasks;
-		this.url = "jdbc:mysql://biifer.mine.nu:3306/development3";
 		this.resultSet = null;
 		this.statement = null;
 		this.preparedStatement = null;
 		connection = DriverManager.getConnection(url, "ivan",
 				"eKufsfrQMNrSyB4K");
-		this.conn = (HttpURLConnection) fayeUrl.openConnection();
-		this.conn.setDoOutput(true);
-		this.conn.setRequestProperty("Content-Type", "application/json");
-		this.conn.setRequestMethod("POST");
-		this.conn.connect();
-
+		
+		initializeFayeConnection();
+	}
+	
+	public void initializeFayeConnection() throws IOException{
+		fayeConnection = (HttpURLConnection) fayeUrl.openConnection();
+		fayeConnection.setDoOutput(true);
+		fayeConnection.setRequestProperty("Content-Type", "application/json");
+		fayeConnection.setRequestMethod("POST");
+		fayeConnection.connect();
 	}
 
 	@Override
@@ -54,14 +57,14 @@ public class DatabaseController implements Runnable {
 		while (true) {
 			try {
 				encryptedMessage = poolOfTasks.getTask();
-				long tim = new Date().getTime();
+				t = new Date().getTime();
 				System.out.println("Thread: " + Thread.currentThread().getId()
-						+ " received encoded message: " + encryptedMessage
-						+ "\nAt: " + tim);
+						+ " Received encoded message: " + encryptedMessage
+						+ "\nAt: " + t);
 
 				decryptedMessage = decryptAES(encryptedMessage);
-				System.out.println("Decrypt done after: "
-						+ (new Date().getTime() - tim));
+				System.out.println(Thread.currentThread().getId() + " Decrypt done after: "
+						+ (new Date().getTime() - t));
 
 				// System.out.println("Decrypted message: " +
 				// decryptedMessage.trim() );
@@ -95,15 +98,16 @@ public class DatabaseController implements Runnable {
 						time = node.getAttribute("time");
 
 						Class.forName("com.mysql.jdbc.Driver");
-						System.out.println("Creating connection after: "
-								+ (new Date().getTime() - tim));
+						System.out.println(Thread.currentThread().getId() + " Creating connection after: "
+								+ (new Date().getTime() - t));
 						if (connection.isClosed()) {
 							connection = DriverManager.getConnection(url,
 									"ivan", "eKufsfrQMNrSyB4K");
+							
 						}
 						long time2 = new Date().getTime();
-						System.out.println("Connection done after: "
-								+ (time2 - tim) + "ms");
+						System.out.println(Thread.currentThread().getId() + " Connection done after: "
+								+ (time2 - t) + "ms");
 
 						statement = connection.createStatement();
 						resultSet = statement
@@ -121,8 +125,8 @@ public class DatabaseController implements Runnable {
 										+ " ORDER BY id DESC LIMIT 1) AS timetable)"
 										+ " AS timestamp FROM gateways WHERE id = "
 										+ gateway_id);
-						System.out.println("query done after: "
-								+ (new Date().getTime() - tim));
+						System.out.println(Thread.currentThread().getId() + " 'Checking' query done after: "
+								+ (new Date().getTime() - t));
 
 						// Checks if the gateway exists. If NOT throw badGateway
 						// exception
@@ -146,7 +150,7 @@ public class DatabaseController implements Runnable {
 							else {
 
 								System.out
-										.println("Adding new sensor to gateway: "
+										.println(Thread.currentThread().getId() + " Adding new sensor to gateway: "
 												+ gateway_id
 												+ " and data to sensor with id: "
 												+ sensor_id + "\n");
@@ -162,8 +166,8 @@ public class DatabaseController implements Runnable {
 					}
 				}
 				// connection.close();
-				System.out.println("Done after: "
-						+ (new Date().getTime() - tim) + "ms");
+				System.out.println(Thread.currentThread().getId() + " Completely done after: "
+						+ (new Date().getTime() - t) + "ms");
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			} catch (Exception e) {
@@ -174,6 +178,8 @@ public class DatabaseController implements Runnable {
 
 	public void addSensorReadings(String timestamp) throws SQLException,
 			ParseException, IOException {
+		System.out.println(Thread.currentThread().getId() + " Adding sensor reading after: "
+				+ (new Date().getTime() - t));
 		if (timestamp != null) {
 			DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			long timestampLong = sdf.parse(timestamp).getTime();
@@ -187,10 +193,18 @@ public class DatabaseController implements Runnable {
 				preparedStatement.setString(3, "" + value);
 				preparedStatement.setString(4, time);
 				preparedStatement.setString(5, time);
+				System.out.println(Thread.currentThread().getId() + " executing Update: "
+						+ (new Date().getTime() - t));
 				preparedStatement.executeUpdate();
-
+				System.out.println(Thread.currentThread().getId() + " executeUpdate done after: "
+						+ (new Date().getTime() - t));
 				preparedStatement.close();
+				
+				System.out.println(Thread.currentThread().getId() + " closed prepared statement after: "
+						+ (new Date().getTime() - t));
 				pushToFaye();
+				System.out.println(Thread.currentThread().getId() +  " pushed to faye after: "
+						+ (new Date().getTime() - t));
 			}
 		} else {
 			String gateway = "INSERT INTO sensor_readings (sensor_id, gateway_id, value, created_at, updated_at) VALUES( ?, ?, ?, ?, ?)";
@@ -279,14 +293,18 @@ public class DatabaseController implements Runnable {
 		arrayMessageJSON.put("data", elementJSON.toString());
 		
 		try {
-			outputWriter = new OutputStreamWriter(new BufferedOutputStream(conn.getOutputStream()));
-		} catch (Exception e) {
-			// TODO: handle exception
+			outputWriter = new OutputStreamWriter(new BufferedOutputStream(fayeConnection.getOutputStream()));
+			outputWriter.write(arrayMessageJSON.toString());
+		} catch (IOException e) {
+			fayeConnection.disconnect();
+			initializeFayeConnection();
+			outputWriter = new OutputStreamWriter(new BufferedOutputStream(fayeConnection.getOutputStream()));
+			outputWriter.write(arrayMessageJSON.toString());
+		}finally{
+
+			outputWriter.close();
 		}
-		outputWriter.write(arrayMessageJSON.toString());
-		//.write(
-			//	arrayMessageJSON.toString().getBytes("UTF-8"));
-		conn.getInputStream();
+		fayeConnection.getInputStream();
 
 		// conn.disconnect();
 	}
